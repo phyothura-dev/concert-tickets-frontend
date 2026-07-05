@@ -30,7 +30,7 @@ declare global {
   }
 }
 
-export function GoogleSignInButton() {
+export function GoogleSignInButton({ width = 220 }: { width?: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -64,9 +64,10 @@ export function GoogleSignInButton() {
       window.google.accounts.id.renderButton(containerRef.current, {
         theme: "outline",
         size: "large",
-        width: 220,
+        width: width,
       });
     };
+
 
     if (window.google?.accounts.id) {
       initializeButton();

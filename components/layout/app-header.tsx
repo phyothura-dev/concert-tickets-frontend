@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Menu, Music2 } from "lucide-react";
 import { AuthStatus } from "@/components/auth/auth-status";
@@ -20,6 +22,7 @@ export function AppHeader() {
           <span className="truncate text-lg">Music Concerts</span>
         </Link>
         <div className="flex items-center gap-3">
+          {/* Desktop nav */}
           <nav className="hidden items-center gap-1 rounded-full bg-white/60 p-1 md:flex">
             <Button asChild className="h-8 rounded-full bg-violet-100 px-4 text-violet-700 hover:bg-violet-100" variant="ghost">
               <Link href="/">Home</Link>
@@ -35,6 +38,7 @@ export function AppHeader() {
             </Button>
           </nav>
 
+          {/* Mobile hamburger */}
           <div className="md:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -46,7 +50,7 @@ export function AppHeader() {
                   <Menu className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
                   <Link href="/">Concerts</Link>
                 </DropdownMenuItem>
@@ -56,15 +60,12 @@ export function AppHeader() {
                 <DropdownMenuItem asChild>
                   <Link href="/admin">Admin</Link>
                 </DropdownMenuItem>
-                <div className="border-t border-zinc-100 p-2">
-                  <AuthStatus />
-                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="hidden sm:block">
-            <AuthStatus />
-          </div>
+
+          {/* Auth — always visible */}
+          <AuthStatus />
         </div>
       </div>
     </header>

@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
 import { authUserResponseSchema, envelopeSchema, signOutResultSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, AuthUserResponse, SignOutResult } from "@/lib/api/types";
+import type { ApiEnvelope, AuthUserResponse, SignOutResult, LoginInput, RegisterInput } from "@/lib/api/types";
 
 const authEnvelope = envelopeSchema(authUserResponseSchema);
 const signOutEnvelope = envelopeSchema(signOutResultSchema);
@@ -10,6 +10,22 @@ export const authService = {
     const response = await apiFetch<ApiEnvelope<AuthUserResponse>>("/auth/google", {
       method: "POST",
       body: { idToken },
+    });
+    return authEnvelope.parse(response).data.user;
+  },
+
+  async login(credentials: LoginInput) {
+    const response = await apiFetch<ApiEnvelope<AuthUserResponse>>("/auth/login", {
+      method: "POST",
+      body: credentials,
+    });
+    return authEnvelope.parse(response).data.user;
+  },
+
+  async register(credentials: RegisterInput) {
+    const response = await apiFetch<ApiEnvelope<AuthUserResponse>>("/auth/register", {
+      method: "POST",
+      body: credentials,
     });
     return authEnvelope.parse(response).data.user;
   },
@@ -28,4 +44,5 @@ export const authService = {
     return signOutEnvelope.parse(response).data;
   },
 };
+
 

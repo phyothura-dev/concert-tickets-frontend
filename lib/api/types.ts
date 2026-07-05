@@ -7,7 +7,9 @@ import type {
   directPurchaseResultSchema,
   directPurchaseSchema,
   legacyPurchaseResultSchema,
+  loginSchema,
   purchaseSchema,
+  registerSchema,
   reservationCreatedSchema,
   reserveSchema,
   signOutResultSchema,
@@ -28,10 +30,13 @@ export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type ReserveInput = z.infer<typeof reserveSchema>;
 export type PurchaseInput = z.infer<typeof purchaseSchema>;
 export type DirectPurchaseInput = z.infer<typeof directPurchaseSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+export type RegisterInput = z.infer<typeof registerSchema>;
 
 export type ApiEnvelope<T> = {
   status?: "success";
   message: string;
   data: T;
 };
+
 

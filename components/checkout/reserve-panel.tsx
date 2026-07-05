@@ -13,21 +13,23 @@ import {
 } from "@/components/ui/card";
 import { QuantityStepper } from "./quantity-stepper";
 import { ReservationCountdown } from "./reservation-countdown";
-import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useReservation } from "@/hooks/use-reservation";
+import { useAuthModal } from "@/providers/auth-modal-provider";
 import { toUserMessage } from "@/lib/api/errors";
 import type { ConcertDto, ReservationCreated } from "@/lib/api/types";
 
 export function ReservePanel({ concert }: { concert: ConcertDto }) {
   const router = useRouter();
   const userQuery = useCurrentUser();
+  const { openSignIn } = useAuthModal();
   const { reserveMutation, purchaseMutation } = useReservation();
   const [quantity, setQuantity] = useState(1);
   const [reservation, setReservation] = useState<ReservationCreated | null>(null);
   const [expired, setExpired] = useState(false);
   const userLoading = userQuery.isLoading;
   const signedIn = Boolean(userQuery.data);
+
 
   const soldOut = concert.availableStock <= 0;
   const maxQuantity = Math.max(1, Math.min(5, concert.availableStock));
@@ -111,8 +113,14 @@ export function ReservePanel({ concert }: { concert: ConcertDto }) {
             <p className="text-sm text-zinc-600">
               Your hold is tied to your account so the timer and purchase flow stay in sync.
             </p>
-            <GoogleSignInButton />
+            <Button
+              onClick={openSignIn}
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl h-11 transition-all cursor-pointer"
+            >
+              Sign In
+            </Button>
           </div>
+
         ) : !reservation || expired ? (
           <Button
             className="w-full"

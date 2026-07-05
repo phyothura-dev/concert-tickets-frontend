@@ -102,6 +102,16 @@ export const directPurchaseSchema = z.object({
     .max(5, "quantity must be between 1 and 5"),
 });
 
+export const loginSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const registerSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export function envelopeSchema<T extends z.ZodTypeAny>(dataSchema: T) {
   return z.object({
     status: z.literal("success").optional(),
@@ -109,4 +119,5 @@ export function envelopeSchema<T extends z.ZodTypeAny>(dataSchema: T) {
     data: dataSchema,
   });
 }
+
 
