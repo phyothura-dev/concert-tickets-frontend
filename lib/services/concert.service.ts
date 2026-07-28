@@ -21,5 +21,19 @@ export const concertService = {
     });
     return concertEnvelope.parse(response).data;
   },
+  async updateConcert(id: string, input: CreateConcertInput) {
+    const response = await apiFetch<ApiEnvelope<ConcertDto>>(`/concerts/${id}`, {
+      method: "PUT",
+      body: input,
+    });
+    return concertEnvelope.parse(response).data;
+  },
+
+  async deleteConcert(id: string) {
+    const response = await apiFetch<ApiEnvelope<void>>(`/concerts/${id}`, {
+      method: "DELETE",
+    });
+    return response.data;
+  },
 };
 

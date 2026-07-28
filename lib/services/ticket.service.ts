@@ -21,5 +21,19 @@ export const ticketService = {
     });
     return ticketEnvelope.parse(response).data;
   },
+  async updateTicket(id: string, input: CreateTicketInput) {
+    const response = await apiFetch<ApiEnvelope<TicketDto>>(`/tickets/${id}`, {
+      method: "PUT",
+      body: input,
+    });
+    return ticketEnvelope.parse(response).data;
+  },
+
+  async deleteTicket(id: string) {
+    const response = await apiFetch<ApiEnvelope<void>>(`/tickets/${id}`, {
+      method: "DELETE",
+    });
+    return response.data;
+  },
 };
 

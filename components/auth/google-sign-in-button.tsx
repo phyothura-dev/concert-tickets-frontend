@@ -80,7 +80,7 @@ export function GoogleSignInButton({ width = 220 }: { width?: number }) {
     script.defer = true;
     script.onload = initializeButton;
     document.head.appendChild(script);
-  }, [signInMutation]);
+  }, [signInMutation.mutate]);
 
   if (!env.googleClientId) {
     return (

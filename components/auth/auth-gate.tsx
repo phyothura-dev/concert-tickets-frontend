@@ -5,9 +5,11 @@ import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminGuard } from "@/hooks/use-admin-guard";
+import { useAuthModal } from "@/providers/auth-modal-provider";
 
 export function AdminGate({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading, isAdmin } = useAdminGuard();
+  const { openSignIn } = useAuthModal();
 
   if (isLoading) {
     return <div className="h-48 animate-pulse rounded-lg bg-zinc-100" />;
@@ -23,9 +25,14 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
           <p className="text-sm text-zinc-600">
             Please sign in with an admin account to manage inventory.
           </p>
-          <Button asChild>
-            <Link href="/">Back to concerts</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={openSignIn} className="bg-violet-600 hover:bg-violet-700">
+              Sign In
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/">Back to site</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

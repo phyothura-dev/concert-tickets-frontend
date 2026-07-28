@@ -5,9 +5,6 @@ type ApiFetchOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
   timeoutMs?: number;
   parseJson?: boolean;
-  beforeRequest?: (request: Request) => void | Promise<void>;
-  afterResponse?: (response: Response) => void | Promise<void>;
-  onApiError?: (error: ApiError) => void | Promise<void>;
 };
 
 function createCorrelationId() {
@@ -63,9 +60,6 @@ export async function apiFetch<T>(
     body,
     timeoutMs = 15_000,
     parseJson = true,
-    beforeRequest,
-    afterResponse,
-    onApiError,
     headers,
     ...init
   } = options;
@@ -90,15 +84,11 @@ export async function apiFetch<T>(
   });
 
   try {
-    await beforeRequest?.(request);
     const response = await fetch(request);
-    await afterResponse?.(response);
     const payload = parseJson ? await readJson(response) : null;
 
     if (!response.ok) {
-      const error = toApiError(response, payload);
-      await onApiError?.(error);
-      throw error;
+      throw toApiError(response, payload);
     }
 
     return payload as T;
