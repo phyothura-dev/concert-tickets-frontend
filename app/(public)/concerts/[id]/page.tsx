@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { ConcertDetail } from "@/components/concert/concert-detail";
 import { ReservePanel } from "@/components/checkout/reserve-panel";
+import { ApiError } from "@/lib/api/errors";
 import { concertService } from "@/lib/services/concert.service";
 import { ticketService } from "@/lib/services/ticket.service";
 
 export const dynamic = "force-dynamic";
+
+const getConcert = cache(async (id: string) => {
+  try {
+    return await concertService.getConcert(id);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
+});
 
 type ConcertPageProps = {
   params: Promise<{ id: string }>;
@@ -15,8 +26,7 @@ export async function generateMetadata({
   params,
 }: ConcertPageProps): Promise<Metadata> {
   const { id } = await params;
-  const concerts = await concertService.listConcerts();
-  const concert = concerts.find((item) => item.id === id);
+  const concert = await getConcert(id);
 
   return {
     title: concert?.title ?? "Concert",
@@ -28,11 +38,10 @@ export async function generateMetadata({
 
 export default async function ConcertPage({ params }: ConcertPageProps) {
   const { id } = await params;
-  const [concerts, tickets] = await Promise.all([
-    concertService.listConcerts(),
+  const [concert, tickets] = await Promise.all([
+    getConcert(id),
     ticketService.listTickets(),
   ]);
-  const concert = concerts.find((item) => item.id === id);
 
   if (!concert) {
     notFound();
@@ -47,4 +56,3 @@ export default async function ConcertPage({ params }: ConcertPageProps) {
     </div>
   );
 }
-

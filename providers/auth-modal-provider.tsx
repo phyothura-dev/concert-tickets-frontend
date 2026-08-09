@@ -1,7 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import React, { createContext, useContext, useState } from "react";
-import { AuthModal } from "@/components/auth/auth-modal";
+
+const AuthModal = dynamic(
+  () => import("@/components/auth/auth-modal").then((module) => module.AuthModal),
+  { ssr: false },
+);
 
 type AuthView = "signin" | "signup";
 
@@ -36,7 +41,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthModalContext.Provider value={{ isOpen, view, openSignIn, openSignUp, closeModal }}>
       {children}
-      <AuthModal />
+      {isOpen ? <AuthModal /> : null}
     </AuthModalContext.Provider>
   );
 }

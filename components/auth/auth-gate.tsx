@@ -26,7 +26,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
             Please sign in with an admin account to manage inventory.
           </p>
           <div className="flex gap-2">
-            <Button onClick={openSignIn} className="bg-violet-600 hover:bg-violet-700">
+            <Button onClick={openSignIn}>
               Sign In
             </Button>
             <Button variant="outline" asChild>
@@ -58,4 +58,3 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
-

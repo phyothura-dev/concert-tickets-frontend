@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
-import { singerSchema, envelopeSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, SingerDto, CreateSingerInput } from "@/lib/api/types";
+import { singerSchema, deletedResultSchema, envelopeSchema } from "@/lib/api/schemas";
+import type { ApiEnvelope, SingerDto, CreateSingerInput, DeletedResult } from "@/lib/api/types";
 
 const singerListEnvelope = envelopeSchema(z.array(singerSchema));
 const singerEnvelope = envelopeSchema(singerSchema);
+const deletedEnvelope = envelopeSchema(deletedResultSchema);
 
 export const singerService = {
   async listSingers() {
@@ -24,16 +25,16 @@ export const singerService = {
 
   async updateSinger(id: string, input: CreateSingerInput) {
     const response = await apiFetch<ApiEnvelope<SingerDto>>(`/singers/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: input,
     });
     return singerEnvelope.parse(response).data;
   },
 
   async deleteSinger(id: string) {
-    const response = await apiFetch<ApiEnvelope<void>>(`/singers/${id}`, {
+    const response = await apiFetch<ApiEnvelope<DeletedResult>>(`/singers/${id}`, {
       method: "DELETE",
     });
-    return response.data;
+    return deletedEnvelope.parse(response).data;
   }
 };

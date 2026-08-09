@@ -28,14 +28,14 @@ export function DataTable<TData>({
   emptyMessage = "No results.",
 }: DataTableProps<TData>) {
   return (
-    <div className="rounded-xl border border-gray-700 bg-white shadow-sm overflow-hidden flex flex-col">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
       <Table>
         <TableHeader className="bg-zinc-50/50">
           <TableRow className="hover:bg-transparent">
             {columns.map((col, i) => (
               <TableHead 
                 key={i}
-                className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
               >
                 {col.header}
               </TableHead>
@@ -47,7 +47,7 @@ export function DataTable<TData>({
             <TableRow>
               <TableCell
                 colSpan={columns.length}
-                className="h-24 text-center text-sm text-zinc-500"
+                className="h-24 text-center text-sm text-muted-foreground"
               >
                 {emptyMessage}
               </TableCell>

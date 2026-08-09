@@ -7,3 +7,7 @@ export function envelopeSchema<T extends z.ZodTypeAny>(dataSchema: T) {
     data: dataSchema,
   });
 }
+
+export const deletedResultSchema = z.object({
+  deleted: z.literal(true),
+});

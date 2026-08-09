@@ -1,14 +1,12 @@
 import { Ticket, Music, Users } from "lucide-react";
 import { concertService } from "@/lib/services/concert.service";
-import { ticketService } from "@/lib/services/ticket.service";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { StatusBadge } from "@/components/admin/status-badge";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [concerts] = await Promise.all([
-    concertService.listConcerts(),
-    ticketService.listTickets(),
-  ]);
+  const concerts = await concertService.listConcerts();
 
   const totalStock = concerts.reduce((sum, c) => sum + c.totalStock, 0);
   const availableStock = concerts.reduce((sum, c) => sum + c.availableStock, 0);
@@ -24,19 +22,15 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
-          Dashboard Overview
-        </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {currentDate} · All figures year-to-date
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Dashboard Overview"
+        description={`${currentDate} · All figures year-to-date`}
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Card 1 */}
-        <div className="flex items-center gap-4 rounded-xl border-gray-800 bg-white p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+        <div className="flex items-center gap-4 rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <Ticket className="h-6 w-6" />
           </div>
           <div>
@@ -48,8 +42,8 @@ export default async function AdminPage() {
         </div>
 
         {/* Card 2 */}
-        <div className="flex items-center gap-4 rounded-xl border-gray-800 bg-white p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+        <div className="flex items-center gap-4 rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <Music className="h-6 w-6" />
           </div>
           <div>
@@ -61,8 +55,8 @@ export default async function AdminPage() {
         </div>
 
         {/* Card 3 */}
-        <div className="flex items-center gap-4 rounded-xl border-gray-800 bg-white p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+        <div className="flex items-center gap-4 rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <Users className="h-6 w-6" />
           </div>
           <div>
@@ -74,11 +68,11 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border-gray-800 bg-white shadow-sm">
-        <div className="border-b-gray-700 px-6 py-4">
+      <div className="rounded-xl border border-border bg-surface shadow-sm">
+        <div className="border-b border-border px-6 py-4">
           <h2 className="text-base font-bold text-zinc-950">Recent Concerts</h2>
         </div>
-        <div className="divide-y divide-gray-700">
+        <div className="divide-y divide-border">
           {concerts.length === 0 ? (
             <div className="px-6 py-8 text-center text-sm text-zinc-500">
               No concerts found.
@@ -105,15 +99,9 @@ export default async function AdminPage() {
                     </p>
                   </div>
                   <div>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        isSoldOut
-                          ? "bg-red-100 text-red-800"
-                          : "bg-emerald-100 text-emerald-800"
-                      }`}
-                    >
+                    <StatusBadge tone={isSoldOut ? "danger" : "success"}>
                       {isSoldOut ? "Sold Out" : "On Sale"}
-                    </span>
+                    </StatusBadge>
                   </div>
                 </div>
               );
@@ -124,4 +112,3 @@ export default async function AdminPage() {
     </div>
   );
 }
-

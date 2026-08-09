@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,6 +21,7 @@ import type { ConcertDto, CreateTicketInput, TicketDto } from "@/lib/api/types";
 import { queryKeys } from "@/lib/query/keys";
 import { ticketService } from "@/lib/services/ticket.service";
 import { useModal } from "@/components/admin/form-modal";
+import { AdminFormActions } from "@/components/admin/admin-form-actions";
 
 interface TicketFormProps {
   initialData?: TicketDto;
@@ -165,22 +165,12 @@ export function TicketForm({ initialData, concerts }: TicketFormProps) {
           )}
         />
       </FormField>
-      <div className="flex justify-end pt-4 gap-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => setOpen(false)}
-          disabled={mutation.isPending}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending 
-            ? (isUpdate ? "Updating..." : "Creating...") 
-            : (isUpdate ? "Update ticket" : "Create ticket")
-          }
-        </Button>
-      </div>
+      <AdminFormActions
+        entityLabel="ticket"
+        isPending={mutation.isPending}
+        isUpdate={isUpdate}
+        onCancel={() => setOpen(false)}
+      />
     </form>
   );
 }

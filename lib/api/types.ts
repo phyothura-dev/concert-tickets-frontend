@@ -6,6 +6,7 @@ import type {
   createConcertSchema,
   createTicketSchema,
   directPurchaseResultSchema,
+  deletedResultSchema,
   directPurchaseSchema,
   legacyPurchaseResultSchema,
   loginSchema,
@@ -15,6 +16,7 @@ import type {
   createCategorySchema,
   createSingerSchema,
   reservationCreatedSchema,
+  reservationHistorySchema,
   reserveSchema,
   signOutResultSchema,
   singerSchema,
@@ -30,8 +32,10 @@ export type UserDto = z.infer<typeof userSchema>;
 export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
 export type SignOutResult = z.infer<typeof signOutResultSchema>;
 export type ReservationCreated = z.infer<typeof reservationCreatedSchema>;
+export type ReservationHistory = z.infer<typeof reservationHistorySchema>;
 export type LegacyPurchaseResult = z.infer<typeof legacyPurchaseResultSchema>;
 export type DirectPurchaseResult = z.infer<typeof directPurchaseResultSchema>;
+export type DeletedResult = z.infer<typeof deletedResultSchema>;
 export type CreateConcertInput = z.infer<typeof createConcertSchema>;
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type ReserveInput = z.infer<typeof reserveSchema>;
@@ -48,5 +52,3 @@ export type ApiEnvelope<T> = {
   message: string;
   data: T;
 };
-
-

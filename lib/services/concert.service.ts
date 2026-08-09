@@ -1,14 +1,26 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
-import { concertSchema, envelopeSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, ConcertDto, CreateConcertInput } from "@/lib/api/types";
+import { concertSchema, deletedResultSchema, envelopeSchema } from "@/lib/api/schemas";
+import type { ApiEnvelope, ConcertDto, CreateConcertInput, DeletedResult } from "@/lib/api/types";
 
 const concertListEnvelope = envelopeSchema(z.array(concertSchema));
 const concertEnvelope = envelopeSchema(concertSchema);
+const deletedEnvelope = envelopeSchema(deletedResultSchema);
+
+export type ConcertFilters = {
+  search?: string;
+  venue?: string;
+  categoryId?: string;
+};
 
 export const concertService = {
-  async listConcerts() {
-    const response = await apiFetch<ApiEnvelope<ConcertDto[]>>("/concerts", {
+  async listConcerts(filters: ConcertFilters = {}) {
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    if (filters.venue) params.set("venue", filters.venue);
+    if (filters.categoryId) params.set("categoryId", filters.categoryId);
+    const query = params.toString();
+    const response = await apiFetch<ApiEnvelope<ConcertDto[]>>(`/concerts${query ? `?${query}` : ""}`, {
       cache: "no-store",
     });
     return concertListEnvelope.parse(response).data;
@@ -21,19 +33,25 @@ export const concertService = {
     });
     return concertEnvelope.parse(response).data;
   },
+  async getConcert(id: string) {
+    const response = await apiFetch<ApiEnvelope<ConcertDto>>(`/concerts/${id}`, {
+      cache: "no-store",
+    });
+    return concertEnvelope.parse(response).data;
+  },
+
   async updateConcert(id: string, input: CreateConcertInput) {
     const response = await apiFetch<ApiEnvelope<ConcertDto>>(`/concerts/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: input,
     });
     return concertEnvelope.parse(response).data;
   },
 
   async deleteConcert(id: string) {
-    const response = await apiFetch<ApiEnvelope<void>>(`/concerts/${id}`, {
+    const response = await apiFetch<ApiEnvelope<DeletedResult>>(`/concerts/${id}`, {
       method: "DELETE",
     });
-    return response.data;
+    return deletedEnvelope.parse(response).data;
   },
 };
-

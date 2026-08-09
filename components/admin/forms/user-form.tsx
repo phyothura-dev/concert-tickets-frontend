@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import type { z } from "zod";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +21,7 @@ import type { UserDto, CreateUserInput } from "@/lib/api/types";
 import { queryKeys } from "@/lib/query/keys";
 import { userService } from "@/lib/services/user.service";
 import { useModal } from "@/components/admin/form-modal";
+import { AdminFormActions } from "@/components/admin/admin-form-actions";
 
 interface UserFormProps {
   initialData?: UserDto;
@@ -32,7 +33,7 @@ export function UserForm({ initialData }: UserFormProps) {
   const { setOpen } = useModal();
   const isUpdate = !!initialData;
 
-  const form = useForm<CreateUserInput>({
+  const form = useForm<z.input<typeof createUserSchema>, unknown, CreateUserInput>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       email: initialData?.email ?? "",
@@ -77,6 +78,11 @@ export function UserForm({ initialData }: UserFormProps) {
           {...form.register("email")}
         />
       </FormField>
+      {!isUpdate ? (
+        <p className="text-xs text-muted-foreground">
+          The backend assigns the configured default password automatically.
+        </p>
+      ) : null}
       <FormField
         label="Name"
         htmlFor="name"
@@ -145,22 +151,12 @@ export function UserForm({ initialData }: UserFormProps) {
         />
       </FormField>
 
-      <div className="flex justify-end pt-4 gap-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => setOpen(false)}
-          disabled={mutation.isPending}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending 
-            ? (isUpdate ? "Updating..." : "Creating...") 
-            : (isUpdate ? "Update user" : "Create user")
-          }
-        </Button>
-      </div>
+      <AdminFormActions
+        entityLabel="user"
+        isPending={mutation.isPending}
+        isUpdate={isUpdate}
+        onCancel={() => setOpen(false)}
+      />
     </form>
   );
 }

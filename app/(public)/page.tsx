@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
-import { ArrowRight, CalendarDays, MapPin, Music2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  MapPin,
+  Search,
+} from "lucide-react";
 import { ConcertList } from "@/components/concert/concert-list";
+import { HomeHeroCarousel } from "@/components/concert/home-hero-carousel";
+import { PublicFooter } from "@/components/layout/public-footer";
 import { Button } from "@/components/ui/button";
-import { concertService } from "@/lib/services/concert.service";
-import { formatDateTime } from "@/lib/utils/format";
+import { categoryService } from "@/lib/services/category.service";
+import {
+  concertService,
+  type ConcertFilters,
+} from "@/lib/services/concert.service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,140 +21,183 @@ export const metadata: Metadata = {
   title: "Concerts",
 };
 
-export default async function Home() {
-  const concerts = await concertService.listConcerts();
-  const totalStock = concerts.reduce((sum, concert) => sum + concert.totalStock, 0);
-  const availableStock = concerts.reduce(
+type HomeProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function singleValue(value: string | string[] | undefined): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function filterHref(filters: ConcertFilters, categoryId?: string): string {
+  const params = new URLSearchParams();
+  if (filters.search) params.set("search", filters.search);
+  if (filters.venue) params.set("venue", filters.venue);
+  if (categoryId) params.set("categoryId", categoryId);
+  const query = params.toString();
+  return `${query ? `/?${query}` : "/"}#events`;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  const filters: ConcertFilters = {
+    search: singleValue(params.search) || undefined,
+    venue: singleValue(params.venue) || undefined,
+    categoryId: singleValue(params.categoryId) || undefined,
+  };
+  const hasFilters = Boolean(filters.search || filters.venue || filters.categoryId);
+
+  const [categories, allConcerts, filteredConcerts] = await Promise.all([
+    categoryService.listCategories(),
+    concertService.listConcerts(),
+    hasFilters ? concertService.listConcerts(filters) : Promise.resolve(null),
+  ]);
+  const concerts = filteredConcerts ?? allConcerts;
+  const totalStock = allConcerts.reduce(
+    (sum, concert) => sum + concert.totalStock,
+    0,
+  );
+  const availableStock = allConcerts.reduce(
     (sum, concert) => sum + concert.availableStock,
     0,
   );
-  const soldOutCount = concerts.filter((concert) => concert.availableStock <= 0).length;
-  const featuredConcert = concerts[1] ?? concerts[0];
-  const hotConcerts = [...concerts].sort((a, b) => a.availableStock - b.availableStock);
-  const genres = [
-    ["🎵", "Pop", concerts.length],
-    ["🎸", "Rock", Math.max(0, concerts.length - 1)],
-    ["🎤", "Acoustic", concerts.length + soldOutCount],
-    ["🎷", "Jazz", Math.max(1, soldOutCount + 1)],
-  ];
+  const soldOutCount = allConcerts.filter(
+    (concert) => concert.availableStock <= 0,
+  ).length;
+  const hotConcerts = [...allConcerts].sort(
+    (a, b) => a.availableStock - b.availableStock,
+  );
+  const venues = [...new Set(allConcerts.map((concert) => concert.venue))].sort();
+  const categoryCounts = new Map<string, number>();
+  allConcerts.forEach((concert) => {
+    if (concert.categoryId) {
+      categoryCounts.set(
+        concert.categoryId,
+        (categoryCounts.get(concert.categoryId) ?? 0) + 1,
+      );
+    }
+  });
+  const categoryIcons = ["🎵", "🎸", "🎤", "🎷"];
 
   return (
     <div className="space-y-14">
-      <section
-        className="relative -mx-4 overflow-hidden rounded-b-[2rem] bg-slate-950 px-4 py-20 text-white shadow-2xl shadow-violet-200/70 sm:-mx-6 sm:px-10 lg:rounded-[2rem] lg:px-12"
-        data-section="hero"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(255,255,255,0.2),transparent_12%),radial-gradient(circle_at_72%_12%,rgba(255,255,255,0.18),transparent_10%),linear-gradient(120deg,rgba(17,24,39,0.45),rgba(88,28,135,0.34)),linear-gradient(to_top,rgba(0,0,0,0.9),rgba(0,0,0,0.1)),linear-gradient(135deg,#111827,#713f12_44%,#050505)]" />
-        <div className="relative max-w-3xl space-y-7">
-          <div className="flex items-center gap-3 text-sm font-semibold">
-            <span className="rounded-full bg-violet-600 px-3 py-1">✦ Featured Event</span>
-            <span className="text-white/70">1 / {Math.max(1, concerts.length)}</span>
-          </div>
-          <div className="space-y-3">
-            <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
-              {featuredConcert?.title ?? "Upcoming concerts"}
-            </h1>
-            <p className="text-2xl text-white/80">
-              {featuredConcert?.venue ?? "Browse live inventory"}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-5 text-sm text-white/80">
-            {featuredConcert ? (
-              <>
-                <span className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" />
-                  {formatDateTime(featuredConcert.startsAt)}
-                </span>
-                <span className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {featuredConcert.venue}
-                </span>
-              </>
-            ) : null}
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-300" />
-              Live inventory
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {featuredConcert ? (
-              <Button asChild className="h-12 rounded-xl bg-violet-600 px-6 text-white hover:bg-violet-700">
-                <a href={`/concerts/${featuredConcert.id}`}>Get Tickets</a>
-              </Button>
-            ) : null}
-            <Button className="h-12 rounded-xl border-white/25 bg-white/15 px-6 text-white hover:bg-white/20" type="button" variant="outline">
-              Browse All
-            </Button>
-          </div>
-        </div>
-      </section>
+      <div className="-mx-4 -mt-8 sm:-mx-6 lg:-mx-10 lg:-mt-10">
+        <HomeHeroCarousel concerts={allConcerts} />
 
-      <section
-        aria-label="Search concerts"
-        className="-mt-16 rounded-2xl bg-white p-4 shadow-2xl shadow-violet-200/60 ring-1 ring-violet-100 lg:mx-8"
-        data-section="search"
-      >
-        <div className="grid gap-3 lg:grid-cols-[1fr_13rem_auto]">
+        <section
+          aria-label="Search concerts"
+          className="relative z-20 mx-4 -mt-14 rounded-2xl bg-white p-4 shadow-2xl shadow-violet-950/20 ring-1 ring-violet-100 sm:mx-8 lg:mx-auto lg:max-w-6xl"
+          data-section="search"
+        >
+        <form action="/" className="grid gap-3 lg:grid-cols-[1fr_13rem_auto]">
           <label className="flex h-12 items-center gap-3 rounded-xl bg-violet-50 px-4 text-sm text-slate-500">
             <Search className="h-4 w-4" />
+            <span className="sr-only">Search concerts or artists</span>
             <input
               className="w-full bg-transparent outline-none placeholder:text-slate-400"
+              defaultValue={filters.search}
+              name="search"
               placeholder="Search concerts, artists..."
               type="search"
             />
           </label>
           <label className="flex h-12 items-center gap-3 rounded-xl bg-violet-50 px-4 text-sm text-slate-700">
             <MapPin className="h-4 w-4 text-slate-400" />
-            <select className="w-full bg-transparent outline-none">
-              <option>All Locations</option>
-              {concerts.map((concert) => (
-                <option key={concert.id}>{concert.venue}</option>
+            <span className="sr-only">Venue</span>
+            <select
+              className="w-full bg-transparent outline-none"
+              defaultValue={filters.venue ?? ""}
+              name="venue"
+            >
+              <option value="">All Locations</option>
+              {venues.map((venue) => (
+                <option key={venue} value={venue}>
+                  {venue}
+                </option>
               ))}
             </select>
           </label>
-          <Button className="h-12 rounded-xl bg-violet-600 px-7 text-white hover:bg-violet-700" type="button">
+          <Button className="h-12 rounded-xl px-7" type="submit">
             Search
           </Button>
-        </div>
-      </section>
+          {filters.categoryId ? (
+            <input name="categoryId" type="hidden" value={filters.categoryId} />
+          ) : null}
+        </form>
+        </section>
+      </div>
 
-      <section className="space-y-6" data-section="genres">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-tight">Browse by Genre</h2>
-          <button className="flex items-center gap-1 text-sm font-semibold text-violet-600" type="button">
+      <section className="space-y-6" data-section="categories">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Browse by Category
+          </h2>
+          <Link
+            className="flex items-center gap-1 text-sm font-semibold text-brand"
+            href={filterHref(filters)}
+          >
             View all <ArrowRight className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {genres.map(([icon, genre, count]) => (
-            <button
-              className="rounded-2xl border border-violet-100 bg-white p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-200/60"
-              key={genre}
-              type="button"
+          {categories.map((category, index) => (
+            <Link
+              aria-current={
+                filters.categoryId === category.id ? "true" : undefined
+              }
+              className="rounded-2xl border border-violet-100 bg-white p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-200/60 aria-[current=true]:border-brand aria-[current=true]:ring-2 aria-[current=true]:ring-brand/20"
+              href={filterHref(filters, category.id)}
+              key={category.id}
             >
-              <span className="text-3xl">{icon}</span>
-              <span className="mt-3 block text-sm font-semibold">{genre}</span>
-              <span className="mt-1 block text-xs text-slate-500">{count}</span>
-            </button>
+              <span className="text-3xl">
+                {categoryIcons[index % categoryIcons.length]}
+              </span>
+              <span className="mt-3 block text-sm font-semibold">
+                {category.name}
+              </span>
+              <span className="mt-1 block text-xs text-slate-500">
+                {categoryCounts.get(category.id) ?? 0} events
+              </span>
+            </Link>
           ))}
         </div>
       </section>
 
-      <section className="space-y-6" data-section="upcoming">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-tight">Upcoming Concerts</h2>
-          <button className="flex items-center gap-1 text-sm font-semibold text-violet-600" type="button">
-            See all <ArrowRight className="h-4 w-4" />
-          </button>
+      <section className="space-y-6" data-section="upcoming" id="events">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {hasFilters ? "Filtered Events" : "Upcoming Concerts"}
+            </h2>
+            {hasFilters ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {concerts.length} matching events
+              </p>
+            ) : null}
+          </div>
+          {hasFilters ? (
+            <Link
+              className="flex items-center gap-1 text-sm font-semibold text-brand"
+              href="/#events"
+            >
+              Clear filters <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : null}
         </div>
         <ConcertList concerts={concerts} />
       </section>
 
-      <section className="grid gap-6 rounded-3xl bg-violet-600 p-8 text-center text-white shadow-xl shadow-violet-200 md:grid-cols-4" data-section="metrics">
+      <section
+        className="grid gap-6 rounded-3xl bg-brand p-8 text-center text-white shadow-xl shadow-brand/20 md:grid-cols-4"
+        data-section="metrics"
+      >
         {[
-          [`${concerts.length.toLocaleString()}+`, "Events Listed"],
+          [`${allConcerts.length.toLocaleString()}+`, "Events Listed"],
           [`${availableStock.toLocaleString()}+`, "Tickets Available"],
-          [`${Math.max(0, totalStock - availableStock).toLocaleString()}+`, "Tickets Sold"],
+          [
+            `${Math.max(0, totalStock - availableStock).toLocaleString()}+`,
+            "Tickets Sold",
+          ],
           [`${soldOutCount.toLocaleString()}+`, "Sold Out"],
         ].map(([value, label]) => (
           <div key={label}>
@@ -156,37 +209,10 @@ export default async function Home() {
 
       <section className="space-y-6" data-section="hot">
         <h2 className="text-2xl font-semibold tracking-tight">Hot Right Now</h2>
-        <ConcertList concerts={hotConcerts} startIndex={2} />
+        <ConcertList concerts={hotConcerts} />
       </section>
 
- 
-
-      <footer className="grid gap-10 border-t border-violet-100 bg-white/65 px-1 py-10 text-sm text-slate-500 md:grid-cols-4" data-section="footer">
-        <div>
-          <div className="flex items-center gap-2 font-semibold text-slate-950">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
-              <Music2 className="h-4 w-4" />
-            </span>
-            Music Concerts
-          </div>
-          <p className="mt-4 max-w-xs">The premier destination for concert tickets. Secure, instant, guaranteed.</p>
-        </div>
-        {["Platform", "Support", "Company"].map((group) => (
-          <div key={group}>
-            <h3 className="font-semibold text-slate-950">{group}</h3>
-            <ul className="mt-4 space-y-3">
-              {["Browse Events", "Help Center", "Privacy Policy", "Accessibility"].map((item) => (
-                <li key={`${group}-${item}`}>
-                  <button className="transition hover:text-violet-600" type="button">{item}</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        <div className="border-t border-violet-100 text-center pt-6 md:col-span-4">
-            <p>© 2026 Music Concerts. All rights reserved.</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

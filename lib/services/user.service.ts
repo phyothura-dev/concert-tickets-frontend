@@ -24,16 +24,10 @@ export const userService = {
 
   async updateUser(id: string, input: CreateUserInput) {
     const response = await apiFetch<ApiEnvelope<UserDto>>(`/users/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: input,
     });
     return userEnvelope.parse(response).data;
   },
 
-  async deleteUser(id: string) {
-    const response = await apiFetch<ApiEnvelope<void>>(`/users/${id}`, {
-      method: "DELETE",
-    });
-    return response.data;
-  }
 };

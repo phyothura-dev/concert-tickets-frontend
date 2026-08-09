@@ -5,7 +5,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { toUserMessage } from "@/lib/api/errors";
@@ -14,6 +13,7 @@ import type { CategoryDto, CreateCategoryInput } from "@/lib/api/types";
 import { queryKeys } from "@/lib/query/keys";
 import { categoryService } from "@/lib/services/category.service";
 import { useModal } from "@/components/admin/form-modal";
+import { AdminFormActions } from "@/components/admin/admin-form-actions";
 
 interface CategoryFormProps {
   initialData?: CategoryDto;
@@ -43,6 +43,7 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
     onSuccess: () => {
       toast.success(isUpdate ? "Category updated" : "Category created");
       void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.singers });
       setOpen(false);
       router.refresh();
     },
@@ -81,22 +82,12 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
         />
       </FormField>
 
-      <div className="flex justify-end pt-4 gap-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => setOpen(false)}
-          disabled={mutation.isPending}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending 
-            ? (isUpdate ? "Updating..." : "Creating...") 
-            : (isUpdate ? "Update category" : "Create category")
-          }
-        </Button>
-      </div>
+      <AdminFormActions
+        entityLabel="category"
+        isPending={mutation.isPending}
+        isUpdate={isUpdate}
+        onCancel={() => setOpen(false)}
+      />
     </form>
   );
 }

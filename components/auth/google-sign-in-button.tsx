@@ -30,7 +30,13 @@ declare global {
   }
 }
 
-export function GoogleSignInButton({ width = 220 }: { width?: number }) {
+export function GoogleSignInButton({
+  width = 220,
+  onSuccess,
+}: {
+  width?: number;
+  onSuccess?: () => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -39,9 +45,11 @@ export function GoogleSignInButton({ width = 220 }: { width?: number }) {
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.authUser, user);
       toast.success("Signed in successfully");
+      onSuccess?.();
     },
     onError: (error) => toast.error(toUserMessage(error)),
   });
+  const mutateSignIn = signInMutation.mutate;
 
   useEffect(() => {
     if (!env.googleClientId) return;
@@ -56,7 +64,7 @@ export function GoogleSignInButton({ width = 220 }: { width?: number }) {
             toast.error("Google did not return an identity token.");
             return;
           }
-          signInMutation.mutate(response.credential);
+          mutateSignIn(response.credential);
         },
       });
 
@@ -64,23 +72,31 @@ export function GoogleSignInButton({ width = 220 }: { width?: number }) {
       window.google.accounts.id.renderButton(containerRef.current, {
         theme: "outline",
         size: "large",
-        width: width,
+        width: Math.min(width, containerRef.current.clientWidth || width),
       });
     };
-
-
     if (window.google?.accounts.id) {
       initializeButton();
       return;
     }
 
+    const scriptId = "google-identity-services";
+    const existingScript = document.getElementById(scriptId);
+    if (existingScript) {
+      existingScript.addEventListener("load", initializeButton);
+      return () => existingScript.removeEventListener("load", initializeButton);
+    }
+
     const script = document.createElement("script");
+    script.id = scriptId;
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.onload = initializeButton;
+    script.addEventListener("load", initializeButton);
     document.head.appendChild(script);
-  }, [signInMutation.mutate]);
+
+    return () => script.removeEventListener("load", initializeButton);
+  }, [mutateSignIn, width]);
 
   if (!env.googleClientId) {
     return (
@@ -92,8 +108,8 @@ export function GoogleSignInButton({ width = 220 }: { width?: number }) {
   }
 
   return (
-    <div className="min-h-10">
-      <div ref={containerRef} />
+    <div className="min-h-10 w-full overflow-hidden">
+      <div ref={containerRef} className="w-full overflow-hidden" />
     </div>
   );
 }

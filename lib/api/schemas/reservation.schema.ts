@@ -5,6 +5,20 @@ export const reservationCreatedSchema = z.object({
   expiresAt: z.string(),
 });
 
+export const reservationHistorySchema = z.object({
+  id: z.string().uuid(),
+  quantity: z.number().int().positive(),
+  status: z.enum(["PENDING", "PURCHASED", "EXPIRED"]),
+  expiresAt: z.string(),
+  createdAt: z.string(),
+  concert: z.object({
+    id: z.string().uuid(),
+    title: z.string(),
+    venue: z.string(),
+    startsAt: z.string(),
+  }),
+});
+
 export const legacyPurchaseResultSchema = z.object({
   reservationId: z.string().uuid(),
   status: z.literal("PURCHASED"),

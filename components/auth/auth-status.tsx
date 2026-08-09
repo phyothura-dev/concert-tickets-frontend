@@ -17,7 +17,7 @@ export function AuthStatus() {
     return (
       <Button 
         onClick={openSignIn}
-        className="h-9 rounded-full bg-violet-600 px-5 text-white hover:bg-violet-700 font-medium text-sm transition-all cursor-pointer"
+        className="h-9 rounded-full px-5"
       >
         Sign In
       </Button>
@@ -26,5 +26,4 @@ export function AuthStatus() {
 
   return <UserMenu user={userQuery.data} />;
 }
-
 

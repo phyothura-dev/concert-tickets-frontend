@@ -1,4 +1,6 @@
-import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { DeleteEntityButton } from "@/components/admin/delete-entity-button";
 import { Button } from "@/components/ui/button";
 import { categoryService } from "@/lib/services/category.service";
 import { FormModal } from "@/components/admin/form-modal";
@@ -30,16 +32,14 @@ const columns: ColumnDef<CategoryDto>[] = [
         <FormModal 
           title="Edit Category"
           trigger={
-            <button className="hover:text-zinc-600 transition-colors">
+            <button type="button" aria-label={`Edit ${category.name}`} className="hover:text-zinc-600 transition-colors">
               <Pencil className="h-4 w-4" />
             </button>
           }
         >
           <CategoryForm initialData={category} />
         </FormModal>
-        <button className="hover:text-red-600 transition-colors">
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <DeleteEntityButton entity="category" id={category.id} label={category.name} />
       </div>
     )
   }
@@ -50,20 +50,14 @@ export default async function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
-            Categories
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            {categories.length} genres
-          </p>
-        </div>
-        <div>
+      <AdminPageHeader
+        title="Categories"
+        description={`${categories.length} genres`}
+        action={
           <FormModal 
             title="Create Category"
             trigger={
-              <Button className="bg-violet-600 hover:bg-violet-700 rounded-full px-5">
+              <Button className="rounded-full px-5">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Category
               </Button>
@@ -71,8 +65,8 @@ export default async function CategoriesPage() {
           >
             <CategoryForm />
           </FormModal>
-        </div>
-      </div>
+        }
+      />
 
       <DataTable 
         columns={columns}

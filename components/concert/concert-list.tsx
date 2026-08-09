@@ -4,10 +4,8 @@ import type { ConcertDto } from "@/lib/api/types";
 
 export function ConcertList({
   concerts,
-  startIndex = 0,
 }: {
   concerts: ConcertDto[];
-  startIndex?: number;
 }) {
   if (concerts.length === 0) {
     return (
@@ -23,8 +21,8 @@ export function ConcertList({
 
   return (
     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-      {concerts.map((concert, index) => (
-        <ConcertCard key={concert.id} concert={concert} index={startIndex + index} />
+      {concerts.map((concert) => (
+        <ConcertCard key={concert.id} concert={concert} />
       ))}
     </div>
   );

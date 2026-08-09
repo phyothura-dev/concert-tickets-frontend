@@ -12,6 +12,7 @@ export function useReservation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.concerts });
       void queryClient.invalidateQueries({ queryKey: queryKeys.tickets });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.reservationHistory });
     },
   });
 
@@ -20,6 +21,7 @@ export function useReservation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.concerts });
       void queryClient.invalidateQueries({ queryKey: queryKeys.tickets });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.reservationHistory });
     },
   });
 
@@ -28,4 +30,3 @@ export function useReservation() {
     purchaseMutation,
   };
 }
-
