@@ -5,18 +5,18 @@ import type {
   concertSchema,
   createConcertSchema,
   createTicketSchema,
-  directPurchaseResultSchema,
   deletedResultSchema,
-  directPurchaseSchema,
-  legacyPurchaseResultSchema,
   loginSchema,
-  purchaseSchema,
   registerSchema,
   createUserSchema,
   createCategorySchema,
   createSingerSchema,
-  reservationCreatedSchema,
-  reservationHistorySchema,
+  reservationSchema,
+  seatSchema,
+  paymentConfigSchema,
+  paymentSchema,
+  paymentListSchema,
+  paymentMethodIdSchema,
   reserveSchema,
   signOutResultSchema,
   singerSchema,
@@ -31,16 +31,17 @@ export type TicketDto = z.infer<typeof ticketSchema>;
 export type UserDto = z.infer<typeof userSchema>;
 export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
 export type SignOutResult = z.infer<typeof signOutResultSchema>;
-export type ReservationCreated = z.infer<typeof reservationCreatedSchema>;
-export type ReservationHistory = z.infer<typeof reservationHistorySchema>;
-export type LegacyPurchaseResult = z.infer<typeof legacyPurchaseResultSchema>;
-export type DirectPurchaseResult = z.infer<typeof directPurchaseResultSchema>;
+export type Reservation = z.infer<typeof reservationSchema>;
+export type ReservationHistory = Reservation;
+export type SeatDto = z.infer<typeof seatSchema>;
+export type PaymentConfig = z.infer<typeof paymentConfigSchema>;
+export type Payment = z.infer<typeof paymentSchema>;
+export type PaymentList = z.infer<typeof paymentListSchema>;
+export type PaymentMethodId = z.infer<typeof paymentMethodIdSchema>;
 export type DeletedResult = z.infer<typeof deletedResultSchema>;
 export type CreateConcertInput = z.infer<typeof createConcertSchema>;
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type ReserveInput = z.infer<typeof reserveSchema>;
-export type PurchaseInput = z.infer<typeof purchaseSchema>;
-export type DirectPurchaseInput = z.infer<typeof directPurchaseSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;

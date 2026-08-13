@@ -1,22 +1,7 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { ErrorState } from '@/components/ui/async-state';
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  return (
-    <div className="rounded-lg border border-red-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-zinc-950">Unable to load page</h2>
-      <p className="mt-2 text-sm text-zinc-600">{error.message}</p>
-      <Button className="mt-4" onClick={reset}>
-        Try again
-      </Button>
-    </div>
-  );
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  return <ErrorState className="mx-auto w-full max-w-6xl" description={error.message || 'The page could not be loaded.'} onRetry={reset} title="Unable to load page" />;
 }
-

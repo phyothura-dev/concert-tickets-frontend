@@ -7,7 +7,9 @@ import { DataTable, type ColumnDef } from "@/components/admin/data-table";
 import { FormModal } from "@/components/admin/form-modal";
 import { UserForm } from "@/components/admin/forms/user-form";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { ErrorState, LoadingState } from "@/components/ui/async-state";
 import { Button } from "@/components/ui/button";
+import { toUserMessage } from "@/lib/api/errors";
 import type { UserDto } from "@/lib/api/types";
 import { queryKeys } from "@/lib/query/keys";
 import { userService } from "@/lib/services/user.service";
@@ -85,11 +87,13 @@ export default function AdminUsersPage() {
       />
 
       {usersQuery.isLoading ? (
-        <div className="h-40 animate-pulse rounded-xl bg-muted" />
+        <LoadingState label="Loading users..." />
       ) : usersQuery.isError ? (
-        <div className="rounded-xl border border-danger-muted bg-white p-6 text-sm text-danger">
-          Unable to load users. Please try again.
-        </div>
+        <ErrorState
+          description={toUserMessage(usersQuery.error)}
+          onRetry={() => void usersQuery.refetch()}
+          title="Unable to load users"
+        />
       ) : (
         <DataTable
           columns={columns}

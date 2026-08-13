@@ -15,7 +15,7 @@ export const createTicketSchema = z.object({
     .number()
     .int("totalStock must be an integer")
     .min(1, "totalStock must be a positive integer")
-    .max(1_000_000, "totalStock is too large"),
+    .max(500, "totalStock cannot exceed 500 seats"),
   price: z.coerce
     .number()
     .int("price must be an integer")

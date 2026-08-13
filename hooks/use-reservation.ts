@@ -6,27 +6,14 @@ import { reservationService } from "@/lib/services/reservation.service";
 
 export function useReservation() {
   const queryClient = useQueryClient();
-
   const reserveMutation = useMutation({
     mutationFn: reservationService.reserve,
-    onSuccess: () => {
+    onSuccess: (reservation) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.concerts });
       void queryClient.invalidateQueries({ queryKey: queryKeys.tickets });
+      if (reservation.ticket) void queryClient.invalidateQueries({ queryKey: queryKeys.seats(reservation.ticket.id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.reservationHistory });
     },
   });
-
-  const purchaseMutation = useMutation({
-    mutationFn: reservationService.purchase,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.concerts });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.tickets });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.reservationHistory });
-    },
-  });
-
-  return {
-    reserveMutation,
-    purchaseMutation,
-  };
+  return { reserveMutation };
 }

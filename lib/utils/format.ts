@@ -8,7 +8,7 @@ export function formatDateTime(value: string) {
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat("en", {
     style: "currency",
-    currency: "USD",
+    currency: "MMK",
     maximumFractionDigits: 0,
   }).format(value);
 }
@@ -19,4 +19,3 @@ export function formatCountdown(totalSeconds: number) {
   const seconds = safeSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
-

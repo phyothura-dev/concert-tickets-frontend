@@ -71,7 +71,8 @@ export async function apiFetch<T>(
   requestHeaders.set("X-Correlation-ID", createCorrelationId());
 
   const hasBody = body !== undefined;
-  if (hasBody && !requestHeaders.has("Content-Type")) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  if (hasBody && !isFormData && !requestHeaders.has("Content-Type")) {
     requestHeaders.set("Content-Type", "application/json");
   }
 
@@ -79,7 +80,7 @@ export async function apiFetch<T>(
     ...init,
     credentials: "include",
     headers: requestHeaders,
-    body: hasBody ? JSON.stringify(body) : undefined,
+    body: hasBody ? (isFormData ? body : JSON.stringify(body)) : undefined,
     signal: controller.signal,
   });
 

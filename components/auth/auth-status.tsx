@@ -4,13 +4,14 @@ import { UserMenu } from "./user-menu";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useAuthModal } from "@/providers/auth-modal-provider";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/async-state";
 
 export function AuthStatus() {
   const userQuery = useCurrentUser();
   const { openSignIn } = useAuthModal();
 
   if (userQuery.isLoading) {
-    return <div className="h-10 w-32 animate-pulse rounded-md bg-zinc-100" />;
+    return <LoadingState className="w-10" label="Loading account" size="compact" />;
   }
 
   if (!userQuery.data) {
@@ -26,4 +27,3 @@ export function AuthStatus() {
 
   return <UserMenu user={userQuery.data} />;
 }
-

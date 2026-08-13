@@ -9,6 +9,7 @@ import { FormModal } from "@/components/admin/form-modal";
 import { TicketForm } from "@/components/admin/forms/ticket-form";
 import { DataTable, type ColumnDef } from "@/components/admin/data-table";
 import type { TicketDto } from "@/lib/api/types";
+import { formatCurrency } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ function getColumns(concertNames: Map<string, string>): ColumnDef<TicketDto>[] {
     header: "Price",
     accessorKey: "price",
     cell: (ticket) => (
-      <span className="text-zinc-900">${ticket.price.toFixed(2)}</span>
+      <span className="text-zinc-900">{formatCurrency(ticket.price)}</span>
     )
   },
   {

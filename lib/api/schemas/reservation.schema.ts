@@ -1,61 +1,68 @@
 import { z } from "zod";
 
-export const reservationCreatedSchema = z.object({
-  reservationId: z.string().uuid(),
-  expiresAt: z.string(),
+export const paymentMethodIdSchema = z.enum(["KBZPAY", "WAVEPAY"]);
+
+export const seatSchema = z.object({
+  id: z.string().uuid(),
+  ticketId: z.string().uuid(),
+  label: z.string(),
+  sequence: z.number().int().positive(),
+  status: z.enum(["AVAILABLE", "HELD", "SOLD"]),
 });
 
-export const reservationHistorySchema = z.object({
+export const paymentSummarySchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["PENDING_REVIEW", "APPROVED", "REJECTED", "EXPIRED"]),
+  paymentMethod: paymentMethodIdSchema,
+  rejectionReason: z.string().nullable(),
+  submittedAt: z.string(),
+  reviewedAt: z.string().nullable(),
+});
+
+export const reservationSchema = z.object({
   id: z.string().uuid(),
   quantity: z.number().int().positive(),
-  status: z.enum(["PENDING", "PURCHASED", "EXPIRED"]),
+  status: z.enum(["PENDING", "UNDER_REVIEW", "PURCHASED", "REJECTED", "EXPIRED"]),
+  unitPrice: z.number().int().nullable(),
+  totalAmount: z.number().int().nullable(),
   expiresAt: z.string(),
   createdAt: z.string(),
   concert: z.object({
-    id: z.string().uuid(),
-    title: z.string(),
-    venue: z.string(),
-    startsAt: z.string(),
+    id: z.string().uuid(), title: z.string(), venue: z.string(), startsAt: z.string(),
   }),
+  ticket: z.object({
+    id: z.string().uuid(), type: z.enum(["VIP", "NORMAL"]), price: z.number().int(),
+  }).nullable(),
+  seats: z.array(z.object({ id: z.string().uuid(), label: z.string() })),
+  payment: paymentSummarySchema.nullable(),
 });
 
-export const legacyPurchaseResultSchema = z.object({
-  reservationId: z.string().uuid(),
-  status: z.literal("PURCHASED"),
+export const paymentConfigSchema = z.object({
+  currency: z.literal("MMK"),
+  methods: z.array(z.object({
+    id: paymentMethodIdSchema,
+    name: z.string(),
+  })).min(1),
 });
 
-export const directPurchaseResultSchema = z.object({
-  reservationId: z.string().uuid(),
-  concertId: z.string().uuid(),
-  quantity: z.number().int().positive(),
-  remainingStock: z.number().int().nonnegative(),
-  method: z.enum(["OPTIMISTIC", "PESSIMISTIC"]),
+export const paymentSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["PENDING_REVIEW", "APPROVED", "REJECTED", "EXPIRED"]),
+  paymentMethod: paymentMethodIdSchema,
+  mimeType: z.string(),
+  sizeBytes: z.number().int(),
+  rejectionReason: z.string().nullable(),
+  submittedAt: z.string(),
+  reviewedAt: z.string().nullable(),
+  reservation: reservationSchema,
+  user: z.object({ id: z.string().uuid(), email: z.string(), name: z.string().nullable() }).nullable(),
+});
+
+export const paymentListSchema = z.object({
+  items: z.array(paymentSchema), total: z.number().int(), page: z.number().int(), limit: z.number().int(),
 });
 
 export const reserveSchema = z.object({
-  concertId: z.string().uuid("concertId must be a valid UUID"),
-  quantity: z.coerce
-    .number()
-    .int("quantity must be an integer")
-    .min(1, "quantity must be between 1 and 5")
-    .max(5, "quantity must be between 1 and 5"),
-  holdSeconds: z.coerce
-    .number()
-    .int()
-    .min(10, "holdSeconds must be between 10 and 3600")
-    .max(3600, "holdSeconds must be between 10 and 3600")
-    .optional(),
-});
-
-export const purchaseSchema = z.object({
-  reservationId: z.string().uuid("reservationId must be a valid UUID"),
-});
-
-export const directPurchaseSchema = z.object({
-  concertId: z.string().uuid("concertId must be a valid UUID"),
-  quantity: z.coerce
-    .number()
-    .int("quantity must be an integer")
-    .min(1, "quantity must be between 1 and 5")
-    .max(5, "quantity must be between 1 and 5"),
+  ticketId: z.string().uuid(),
+  seatIds: z.array(z.string().uuid()).min(1).max(5),
 });

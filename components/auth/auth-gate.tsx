@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingState } from "@/components/ui/async-state";
 import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { useAuthModal } from "@/providers/auth-modal-provider";
 
@@ -12,7 +13,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
   const { openSignIn } = useAuthModal();
 
   if (isLoading) {
-    return <div className="h-48 animate-pulse rounded-lg bg-zinc-100" />;
+    return <LoadingState label="Checking admin access..." />;
   }
 
   if (!user) {

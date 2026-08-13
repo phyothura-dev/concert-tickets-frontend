@@ -1,60 +1,31 @@
 import { apiFetch } from "@/lib/api/client";
-import {
-  directPurchaseResultSchema,
-  envelopeSchema,
-  legacyPurchaseResultSchema,
-  reservationCreatedSchema,
-  reservationHistorySchema,
-} from "@/lib/api/schemas";
-import type {
-  ApiEnvelope,
-  DirectPurchaseInput,
-  DirectPurchaseResult,
-  LegacyPurchaseResult,
-  PurchaseInput,
-  ReservationCreated,
-  ReservationHistory,
-  ReserveInput,
-} from "@/lib/api/types";
+import { envelopeSchema, reservationSchema, paymentSchema } from "@/lib/api/schemas";
+import type { ApiEnvelope, Payment, PaymentMethodId, Reservation, ReserveInput } from "@/lib/api/types";
 
-const reservationEnvelope = envelopeSchema(reservationCreatedSchema);
-const purchaseEnvelope = envelopeSchema(legacyPurchaseResultSchema);
-const directPurchaseEnvelope = envelopeSchema(directPurchaseResultSchema);
-const reservationHistoryEnvelope = envelopeSchema(reservationHistorySchema.array());
+const reservationEnvelope = envelopeSchema(reservationSchema);
+const historyEnvelope = envelopeSchema(reservationSchema.array());
+const paymentEnvelope = envelopeSchema(paymentSchema);
 
 export const reservationService = {
   async listHistory() {
-    const response = await apiFetch<ApiEnvelope<ReservationHistory[]>>(
-      "/reservations/me",
-      { cache: "no-store" },
-    );
-    return reservationHistoryEnvelope.parse(response).data;
+    const response = await apiFetch<ApiEnvelope<Reservation[]>>("/reservations/me", { cache: "no-store" });
+    return historyEnvelope.parse(response).data;
   },
-
-  async reserve(input: ReserveInput) {
-    const response = await apiFetch<ApiEnvelope<ReservationCreated>>("/reserve", {
-      method: "POST",
-      body: input,
-    });
+  async getReservation(id: string) {
+    const response = await apiFetch<ApiEnvelope<Reservation>>(`/reservations/${id}`, { cache: "no-store" });
     return reservationEnvelope.parse(response).data;
   },
-
-  async purchase(input: PurchaseInput) {
-    const response = await apiFetch<ApiEnvelope<LegacyPurchaseResult>>("/purchase", {
-      method: "POST",
-      body: input,
-    });
-    return purchaseEnvelope.parse(response).data;
+  async reserve(input: ReserveInput) {
+    const response = await apiFetch<ApiEnvelope<Reservation>>("/reserve", { method: "POST", body: input });
+    return reservationEnvelope.parse(response).data;
   },
-
-  async purchasePessimistic(input: DirectPurchaseInput) {
-    const response = await apiFetch<ApiEnvelope<DirectPurchaseResult>>(
-      "/purchase/pessimistic",
-      {
-        method: "POST",
-        body: input,
-      },
-    );
-    return directPurchaseEnvelope.parse(response).data;
+  async submitPayment(reservationId: string, paymentMethod: PaymentMethodId, screenshot: File) {
+    const body = new FormData();
+    body.append("paymentMethod", paymentMethod);
+    body.append("screenshot", screenshot);
+    const response = await apiFetch<ApiEnvelope<Payment>>(`/reservations/${reservationId}/payment`, {
+      method: "POST", body, timeoutMs: 30_000,
+    });
+    return paymentEnvelope.parse(response).data;
   },
 };
