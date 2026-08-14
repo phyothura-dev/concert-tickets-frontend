@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { categorySchema } from "./category.schema";
 
-// Placeholders for future singer schema implementation
 export const singerSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -12,8 +11,8 @@ export const singerSchema = z.object({
   updatedAt: z.string(),
 });
 
-export const createSingerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  title: z.string().min(1, "Title is required"),
+export const singerInputSchema = z.object({
+  name: z.string().trim().min(1, "Singer name is required").max(160, "Singer name is too long"),
+  title: z.string().trim().min(1, "Artist title is required").max(160, "Artist title is too long"),
   categoryId: z.string().uuid("Please select a category"),
 });

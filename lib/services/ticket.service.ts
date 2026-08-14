@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
 import { deletedResultSchema, envelopeSchema, seatSchema, ticketSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, CreateTicketInput, DeletedResult, SeatDto, TicketDto } from "@/lib/api/types";
+import type { ApiEnvelope, DeletedResult, SeatDto, TicketDto, TicketInput } from "@/lib/api/types";
 
 const ticketListEnvelope = envelopeSchema(z.array(ticketSchema));
 const ticketEnvelope = envelopeSchema(ticketSchema);
@@ -19,14 +19,14 @@ export const ticketService = {
     return envelopeSchema(seatSchema.array()).parse(response).data;
   },
 
-  async createTicket(input: CreateTicketInput) {
+  async createTicket(input: TicketInput) {
     const response = await apiFetch<ApiEnvelope<TicketDto>>("/tickets", {
       method: "POST",
       body: input,
     });
     return ticketEnvelope.parse(response).data;
   },
-  async updateTicket(id: string, input: CreateTicketInput) {
+  async updateTicket(id: string, input: TicketInput) {
     const response = await apiFetch<ApiEnvelope<TicketDto>>(`/tickets/${id}`, {
       method: "PATCH",
       body: input,

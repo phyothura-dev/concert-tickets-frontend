@@ -35,8 +35,8 @@ export function FormModal({ trigger, title, children }: FormModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader className="pr-10">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <ModalContext.Provider value={{ setOpen }}>

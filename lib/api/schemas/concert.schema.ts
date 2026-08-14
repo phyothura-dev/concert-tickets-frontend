@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValid, parseISO } from "date-fns";
 import { categorySchema } from "./category.schema";
 import { singerSchema } from "./singer.schema";
 
@@ -15,10 +16,10 @@ export const concertSchema = z.object({
   singers: z.array(singerSchema),
 });
 
-export const createConcertSchema = z.object({
-  title: z.string().min(1, "title is required").max(500, "title is too long"),
-  venue: z.string().min(1, "venue is required").max(500, "venue is too long"),
-  startsAt: z.string().min(1, "startsAt is required"),
-  categoryId: z.string().uuid().nullable().optional(),
-  singerIds: z.array(z.string().uuid()).max(50).optional(),
+export const concertInputSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(500, "Title is too long"),
+  venue: z.string().trim().min(1, "Venue is required").max(500, "Venue is too long"),
+  startsAt: z.string().trim().min(1, "Start date and time are required").refine((value) => isValid(parseISO(value)), "Enter a valid start date and time"),
+  categoryId: z.string().uuid("Select a valid category").nullable().optional(),
+  singerIds: z.array(z.string().uuid()).max(50, "Select no more than 50 artists").optional(),
 });

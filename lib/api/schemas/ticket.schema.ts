@@ -9,16 +9,16 @@ export const ticketSchema = z.object({
   type: z.enum(["VIP", "NORMAL"]),
 });
 
-export const createTicketSchema = z.object({
-  concertId: z.string().uuid("concertId must be a valid UUID"),
+export const ticketInputSchema = z.object({
+  concertId: z.string().uuid("Please select a concert"),
   totalStock: z.coerce
     .number()
-    .int("totalStock must be an integer")
-    .min(1, "totalStock must be a positive integer")
-    .max(500, "totalStock cannot exceed 500 seats"),
+    .int("Total seats must be an integer")
+    .min(1, "Total seats must be at least 1")
+    .max(500, "Total seats cannot exceed 500"),
   price: z.coerce
     .number()
-    .int("price must be an integer")
-    .min(0, "price must be non-negative"),
+    .int("Price must be an integer")
+    .min(0, "Price cannot be negative"),
   type: z.enum(["VIP", "NORMAL"]),
 });

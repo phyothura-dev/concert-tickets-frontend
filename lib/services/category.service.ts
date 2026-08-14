@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
 import { categorySchema, deletedResultSchema, envelopeSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, CategoryDto, CreateCategoryInput, DeletedResult } from "@/lib/api/types";
+import type { ApiEnvelope, CategoryDto, CategoryInput, DeletedResult } from "@/lib/api/types";
 
 const categoryListEnvelope = envelopeSchema(z.array(categorySchema));
 const categoryEnvelope = envelopeSchema(categorySchema);
@@ -15,7 +15,7 @@ export const categoryService = {
     return categoryListEnvelope.parse(response).data;
   },
 
-  async createCategory(input: CreateCategoryInput) {
+  async createCategory(input: CategoryInput) {
     const response = await apiFetch<ApiEnvelope<CategoryDto>>("/categories", {
       method: "POST",
       body: input,
@@ -23,7 +23,7 @@ export const categoryService = {
     return categoryEnvelope.parse(response).data;
   },
 
-  async updateCategory(id: string, input: CreateCategoryInput) {
+  async updateCategory(id: string, input: CategoryInput) {
     const response = await apiFetch<ApiEnvelope<CategoryDto>>(`/categories/${id}`, {
       method: "PATCH",
       body: input,

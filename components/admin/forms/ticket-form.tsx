@@ -2,26 +2,23 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
+import { AdminFormActions } from "@/components/admin/admin-form-actions";
+import { useModal } from "@/components/admin/form-modal";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toUserMessage } from "@/lib/api/errors";
-import { createTicketSchema } from "@/lib/api/schemas";
-import type { ConcertDto, CreateTicketInput, TicketDto } from "@/lib/api/types";
+import { ticketInputSchema } from "@/lib/api/schemas";
+import type { ConcertDto, TicketDto, TicketInput } from "@/lib/api/types";
 import { queryKeys } from "@/lib/query/keys";
 import { ticketService } from "@/lib/services/ticket.service";
-import { useModal } from "@/components/admin/form-modal";
-import { AdminFormActions } from "@/components/admin/admin-form-actions";
+import { formatDate } from "@/lib/utils/format";
 
 interface TicketFormProps {
   initialData?: TicketDto;
@@ -32,12 +29,11 @@ export function TicketForm({ initialData, concerts }: TicketFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { setOpen } = useModal();
-  const isUpdate = !!initialData;
-
-  const form = useForm<z.input<typeof createTicketSchema>, unknown, CreateTicketInput>({
-    resolver: zodResolver(createTicketSchema),
+  const isUpdate = Boolean(initialData);
+  const form = useForm<z.input<typeof ticketInputSchema>, unknown, TicketInput>({
+    resolver: zodResolver(ticketInputSchema),
     defaultValues: {
-      concertId: initialData?.concertId ?? (concerts[0]?.id ?? ""),
+      concertId: initialData?.concertId ?? "",
       totalStock: initialData?.totalStock ?? 100,
       price: initialData?.price ?? 0,
       type: initialData?.type ?? "NORMAL",
@@ -45,12 +41,10 @@ export function TicketForm({ initialData, concerts }: TicketFormProps) {
   });
 
   const mutation = useMutation({
-    mutationFn: (values: CreateTicketInput) => {
-      if (isUpdate && initialData) {
-        return ticketService.updateTicket(initialData.id, values);
-      }
-      return ticketService.createTicket(values);
-    },
+    mutationFn: (values: TicketInput) =>
+      isUpdate && initialData
+        ? ticketService.updateTicket(initialData.id, values)
+        : ticketService.createTicket(values),
     onSuccess: () => {
       toast.success(isUpdate ? "Ticket inventory updated" : "Ticket inventory created");
       void queryClient.invalidateQueries({ queryKey: queryKeys.concerts });
@@ -63,114 +57,64 @@ export function TicketForm({ initialData, concerts }: TicketFormProps) {
 
   if (concerts.length === 0) {
     return (
-      <p className="text-sm text-zinc-600">
-        Create a concert before adding ticket inventory.
-      </p>
+      <div className="rounded-md border border-border bg-muted p-4 text-sm text-muted-foreground">
+        Create a concert before adding ticket inventory.{" "}
+        <Link href="/admin/concerts" className="font-medium text-brand hover:underline" onClick={() => setOpen(false)}>Go to Concerts</Link>
+      </div>
     );
   }
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
-    >
-      <FormField
-        label="Concert"
-        htmlFor="concertId"
-        errorId="concertId-error"
-        error={form.formState.errors.concertId?.message}
-      >
+    <form className="space-y-5" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+      <FormField label="Concert" htmlFor="concertId" required errorId="concertId-error" error={form.formState.errors.concertId?.message}>
         <Controller
           control={form.control}
           name="concertId"
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger
-                id="concertId"
-                aria-invalid={Boolean(form.formState.errors.concertId)}
-                aria-describedby={
-                  form.formState.errors.concertId ? "concertId-error" : undefined
-                }
-              >
-                <SelectValue placeholder="Select concert" />
-              </SelectTrigger>
-              <SelectContent>
-                {concerts.map((concert) => (
-                  <SelectItem key={concert.id} value={concert.id}>
-                    {concert.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="concertId"
+              options={concerts.map((concert) => ({
+                value: concert.id,
+                label: `${concert.title} · ${concert.venue} · ${formatDate(concert.startsAt)}`,
+              }))}
+              value={field.value}
+              onValueChange={field.onChange}
+              placeholder="Search concerts by title, venue, or date"
+              aria-invalid={Boolean(form.formState.errors.concertId)}
+              aria-describedby={form.formState.errors.concertId ? "concertId-error" : undefined}
+            />
           )}
         />
       </FormField>
-      <FormField
-        label="Total stock"
-        htmlFor="totalStock"
-        errorId="totalStock-error"
-        error={form.formState.errors.totalStock?.message}
-      >
-        <Input
-          id="totalStock"
-          type="number"
-          min={1}
-          aria-invalid={Boolean(form.formState.errors.totalStock)}
-          aria-describedby={
-            form.formState.errors.totalStock ? "totalStock-error" : undefined
-          }
-          {...form.register("totalStock")}
-        />
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <FormField label="Ticket type" htmlFor="type" required errorId="type-error" error={form.formState.errors.type?.message}>
+          <Controller
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="type" aria-invalid={Boolean(form.formState.errors.type)} aria-describedby={form.formState.errors.type ? "type-error" : undefined}>
+                  <SelectValue placeholder="Select ticket type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NORMAL">Normal</SelectItem>
+                  <SelectItem value="VIP">VIP</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FormField>
+        <FormField label="Total seats" htmlFor="totalStock" required errorId="totalStock-error" error={form.formState.errors.totalStock?.message}>
+          <Input id="totalStock" type="number" min={1} max={500} step={1} placeholder="100" aria-invalid={Boolean(form.formState.errors.totalStock)} aria-describedby={form.formState.errors.totalStock ? "totalStock-error" : undefined} {...form.register("totalStock")} />
+        </FormField>
+      </div>
+
+      <FormField label="Price (MMK)" htmlFor="price" required errorId="price-error" error={form.formState.errors.price?.message}>
+        <Input id="price" type="number" min={0} step={1} placeholder="50000" aria-invalid={Boolean(form.formState.errors.price)} aria-describedby={form.formState.errors.price ? "price-error" : undefined} {...form.register("price")} />
       </FormField>
-      <FormField
-        label="Price"
-        htmlFor="price"
-        errorId="price-error"
-        error={form.formState.errors.price?.message}
-      >
-        <Input
-          id="price"
-          type="number"
-          min={0}
-          aria-invalid={Boolean(form.formState.errors.price)}
-          aria-describedby={form.formState.errors.price ? "price-error" : undefined}
-          {...form.register("price")}
-        />
-      </FormField>
-      <FormField
-        label="Type"
-        htmlFor="type"
-        errorId="type-error"
-        error={form.formState.errors.type?.message}
-      >
-        <Controller
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger
-                id="type"
-                aria-invalid={Boolean(form.formState.errors.type)}
-                aria-describedby={
-                  form.formState.errors.type ? "type-error" : undefined
-                }
-              >
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NORMAL">NORMAL</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </FormField>
-      <AdminFormActions
-        entityLabel="ticket"
-        isPending={mutation.isPending}
-        isUpdate={isUpdate}
-        onCancel={() => setOpen(false)}
-      />
+
+      <AdminFormActions entityLabel="ticket" isPending={mutation.isPending} isUpdate={isUpdate} onCancel={() => setOpen(false)} />
     </form>
   );
 }

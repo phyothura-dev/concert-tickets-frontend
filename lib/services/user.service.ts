@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
 import { userSchema, envelopeSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, UserDto, CreateUserInput } from "@/lib/api/types";
+import type { ApiEnvelope, UserDto, CreateUserInput, UserInput } from "@/lib/api/types";
 
 const userListEnvelope = envelopeSchema(z.array(userSchema));
 const userEnvelope = envelopeSchema(userSchema);
@@ -22,7 +22,7 @@ export const userService = {
     return userEnvelope.parse(response).data;
   },
 
-  async updateUser(id: string, input: CreateUserInput) {
+  async updateUser(id: string, input: UserInput) {
     const response = await apiFetch<ApiEnvelope<UserDto>>(`/users/${id}`, {
       method: "PATCH",
       body: input,

@@ -14,11 +14,11 @@ export function AdminFormActions({
   const verb = isUpdate ? "Update" : "Create";
 
   return (
-    <div className="flex justify-end gap-4 pt-4">
-      <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+    <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-3 border-t border-border bg-surface pt-4 sm:flex-row sm:justify-end">
+      <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={onCancel} disabled={isPending}>
         Cancel
       </Button>
-      <Button type="submit" disabled={isPending}>
+      <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
         {isPending ? `${isUpdate ? "Updating" : "Creating"}...` : `${verb} ${entityLabel}`}
       </Button>
     </div>

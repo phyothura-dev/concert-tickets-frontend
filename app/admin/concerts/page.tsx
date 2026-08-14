@@ -4,15 +4,18 @@ import { DeleteEntityButton } from "@/components/admin/delete-entity-button";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import { concertService } from "@/lib/services/concert.service";
+import { categoryService } from "@/lib/services/category.service";
+import { singerService } from "@/lib/services/singer.service";
 import { FormModal } from "@/components/admin/form-modal";
 import { ConcertForm } from "@/components/admin/forms/concert-form";
 import { DataTable, type ColumnDef } from "@/components/admin/data-table";
-import type { ConcertDto } from "@/lib/api/types";
+import type { CategoryDto, ConcertDto, SingerDto } from "@/lib/api/types";
 import { formatDate } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
-const columns: ColumnDef<ConcertDto>[] = [
+function getColumns(categories: CategoryDto[], singers: SingerDto[]): ColumnDef<ConcertDto>[] {
+  return [
   {
     header: "Event",
     accessorKey: "title",
@@ -57,16 +60,21 @@ const columns: ColumnDef<ConcertDto>[] = [
             </button>
           }
         >
-          <ConcertForm initialData={concert} />
+          <ConcertForm initialData={concert} categories={categories} singers={singers} />
         </FormModal>
         <DeleteEntityButton entity="concert" id={concert.id} label={concert.title} />
       </div>
     )
   }
-];
+  ];
+}
 
 export default async function AdminConcertsPage() {
-  const concerts = await concertService.listConcerts();
+  const [concerts, categories, singers] = await Promise.all([
+    concertService.listConcerts(),
+    categoryService.listCategories(),
+    singerService.listSingers(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -83,13 +91,13 @@ export default async function AdminConcertsPage() {
               </Button>
             }
           >
-            <ConcertForm />
+            <ConcertForm categories={categories} singers={singers} />
           </FormModal>
         }
       />
 
       <DataTable 
-        columns={columns}
+        columns={getColumns(categories, singers)}
         data={concerts}
         keyExtractor={(item) => item.id}
         emptyMessage="No concerts found."

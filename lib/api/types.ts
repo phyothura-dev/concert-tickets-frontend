@@ -3,14 +3,14 @@ import type {
   authUserResponseSchema,
   categorySchema,
   concertSchema,
-  createConcertSchema,
-  createTicketSchema,
+  concertInputSchema,
+  ticketInputSchema,
   deletedResultSchema,
   loginSchema,
   registerSchema,
-  createUserSchema,
-  createCategorySchema,
-  createSingerSchema,
+  userInputSchema,
+  categoryInputSchema,
+  singerInputSchema,
   reservationSchema,
   seatSchema,
   paymentConfigSchema,
@@ -39,14 +39,15 @@ export type Payment = z.infer<typeof paymentSchema>;
 export type PaymentList = z.infer<typeof paymentListSchema>;
 export type PaymentMethodId = z.infer<typeof paymentMethodIdSchema>;
 export type DeletedResult = z.infer<typeof deletedResultSchema>;
-export type CreateConcertInput = z.infer<typeof createConcertSchema>;
-export type CreateTicketInput = z.infer<typeof createTicketSchema>;
+export type ConcertInput = z.infer<typeof concertInputSchema>;
+export type TicketInput = z.infer<typeof ticketInputSchema>;
 export type ReserveInput = z.infer<typeof reserveSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
-export type CreateSingerInput = z.infer<typeof createSingerSchema>;
+export type UserInput = z.infer<typeof userInputSchema>;
+export type CreateUserInput = Omit<UserInput, "emailVerified">;
+export type CategoryInput = z.infer<typeof categoryInputSchema>;
+export type SingerInput = z.infer<typeof singerInputSchema>;
 
 export type ApiEnvelope<T> = {
   status?: "success";

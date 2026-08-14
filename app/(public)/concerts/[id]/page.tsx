@@ -73,8 +73,7 @@ export default async function ConcertPage({ params }: ConcertPageProps) {
           </Link>
           <div className="mt-auto max-w-3xl pb-20 sm:pb-24">
             <div className="flex flex-wrap gap-2">
-              {concert.category ? <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand">{concert.category.name}</span> : null}
-              <span className="rounded-full bg-brand/90 px-3 py-1 text-xs font-semibold text-white">Featured event</span>
+              <span className="rounded-full bg-brand/90 px-3 py-1 text-xs font-semibold text-white">{concert?.category && concert.category.name}</span>
             </div>
             <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">{concert.title}</h1>
             <p className="mt-2 text-lg font-medium text-white/80 sm:text-xl">{performer}</p>

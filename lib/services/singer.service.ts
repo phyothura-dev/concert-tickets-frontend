@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
 import { singerSchema, deletedResultSchema, envelopeSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, SingerDto, CreateSingerInput, DeletedResult } from "@/lib/api/types";
+import type { ApiEnvelope, SingerDto, SingerInput, DeletedResult } from "@/lib/api/types";
 
 const singerListEnvelope = envelopeSchema(z.array(singerSchema));
 const singerEnvelope = envelopeSchema(singerSchema);
@@ -15,7 +15,7 @@ export const singerService = {
     return singerListEnvelope.parse(response).data;
   },
 
-  async createSinger(input: CreateSingerInput) {
+  async createSinger(input: SingerInput) {
     const response = await apiFetch<ApiEnvelope<SingerDto>>("/singers", {
       method: "POST",
       body: input,
@@ -23,7 +23,7 @@ export const singerService = {
     return singerEnvelope.parse(response).data;
   },
 
-  async updateSinger(id: string, input: CreateSingerInput) {
+  async updateSinger(id: string, input: SingerInput) {
     const response = await apiFetch<ApiEnvelope<SingerDto>>(`/singers/${id}`, {
       method: "PATCH",
       body: input,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFetch } from "@/lib/api/client";
 import { concertSchema, deletedResultSchema, envelopeSchema } from "@/lib/api/schemas";
-import type { ApiEnvelope, ConcertDto, CreateConcertInput, DeletedResult } from "@/lib/api/types";
+import type { ApiEnvelope, ConcertDto, ConcertInput, DeletedResult } from "@/lib/api/types";
 
 const concertListEnvelope = envelopeSchema(z.array(concertSchema));
 const concertEnvelope = envelopeSchema(concertSchema);
@@ -26,7 +26,7 @@ export const concertService = {
     return concertListEnvelope.parse(response).data;
   },
 
-  async createConcert(input: CreateConcertInput) {
+  async createConcert(input: ConcertInput) {
     const response = await apiFetch<ApiEnvelope<ConcertDto>>("/concerts", {
       method: "POST",
       body: input,
@@ -40,7 +40,7 @@ export const concertService = {
     return concertEnvelope.parse(response).data;
   },
 
-  async updateConcert(id: string, input: CreateConcertInput) {
+  async updateConcert(id: string, input: ConcertInput) {
     const response = await apiFetch<ApiEnvelope<ConcertDto>>(`/concerts/${id}`, {
       method: "PATCH",
       body: input,
