@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { ErrorState, LoadingState } from '@/components/ui/async-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useReservation } from '@/hooks/use-reservation';
 import { toUserMessage } from '@/lib/api/errors';
@@ -18,10 +19,19 @@ import { formatCurrency, formatDateTime } from '@/lib/utils/format';
 import { useAuthModal } from '@/providers/auth-modal-provider';
 
 const SEATS_PER_ROW = 10;
+const SEAT_CLASS =
+  'flex h-9 w-9 items-center justify-center rounded-[10px] border text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
+const seatStatusClasses: Record<SeatDto['status'], string> = {
+  AVAILABLE: 'border-emerald-300 bg-emerald-100 text-emerald-800 hover:-translate-y-0.5 hover:border-emerald-500',
+  HELD: 'cursor-not-allowed border-amber-300 bg-amber-100 text-amber-700',
+  SOLD: 'cursor-not-allowed border-rose-200 bg-rose-100 text-rose-400',
+};
 
 function toRows(seats: SeatDto[]) {
   const rows: SeatDto[][] = [];
-  for (let index = 0; index < seats.length; index += SEATS_PER_ROW) rows.push(seats.slice(index, index + SEATS_PER_ROW));
+  for (let index = 0; index < seats.length; index += SEATS_PER_ROW) {
+    rows.push(seats.slice(index, index + SEATS_PER_ROW));
+  }
   return rows;
 }
 
@@ -90,7 +100,6 @@ export function ReservePanel({ concert, tickets }: { concert: ConcertDto; ticket
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
           <div>
-
             <h2 className="mt-7 text-3xl font-bold tracking-tight">Select Your Seats</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {concert.title} · {formatDateTime(concert.startsAt)} · {concert.venue}
@@ -111,7 +120,9 @@ export function ReservePanel({ concert, tickets }: { concert: ConcertDto; ticket
               onClick={() => chooseTicket(item.id)}
               className={cn(
                 'rounded-full border px-5 py-2 text-sm font-semibold transition',
-                ticketId === item.id ? 'border-brand bg-brand text-white shadow-md shadow-brand/20' : 'border-brand/15 bg-white text-muted-foreground hover:border-brand/40 hover:text-foreground',
+                ticketId === item.id
+                  ? 'border-brand bg-brand text-white shadow-md shadow-brand/20'
+                  : 'border-brand/15 bg-white text-muted-foreground hover:border-brand/40 hover:text-foreground',
               )}
             >
               {item.type} · {formatCurrency(item.price)}
@@ -126,14 +137,9 @@ export function ReservePanel({ concert, tickets }: { concert: ConcertDto; ticket
             </div>
 
             {seatsQuery.isLoading ? (
-              <LoadingState className="min-h-72 border-0 shadow-none" label="Loading seats..." />
+              <LoadingState className="min-h-72" />
             ) : seatsQuery.isError ? (
-              <ErrorState
-                className="min-h-72 border-0 shadow-none"
-                description={toUserMessage(seatsQuery.error)}
-                onRetry={() => void seatsQuery.refetch()}
-                title="Unable to load seats"
-              />
+              <ErrorState className="min-h-72" message={toUserMessage(seatsQuery.error)} onRetry={() => void seatsQuery.refetch()} />
             ) : rows.length ? (
               <div className="max-h-[35rem] overflow-auto pb-3">
                 <div className="mx-auto w-max min-w-full space-y-2">
@@ -152,11 +158,8 @@ export function ReservePanel({ concert, tickets }: { concert: ConcertDto; ticket
                             aria-pressed={isSelected}
                             title={seat.label}
                             className={cn(
-                              'flex h-9 w-9 items-center justify-center rounded-[10px] border text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
-                              isSelected && 'border-brand bg-brand text-white shadow-md shadow-brand/30',
-                              !isSelected && seat.status === 'AVAILABLE' && 'border-emerald-300 bg-emerald-100 text-emerald-800 hover:-translate-y-0.5 hover:border-emerald-500',
-                              seat.status === 'HELD' && 'cursor-not-allowed border-amber-300 bg-amber-100 text-amber-700',
-                              seat.status === 'SOLD' && 'cursor-not-allowed border-rose-200 bg-rose-100 text-rose-400',
+                              SEAT_CLASS,
+                              isSelected ? 'border-brand bg-brand text-white shadow-md shadow-brand/30' : seatStatusClasses[seat.status],
                             )}
                           >
                             {seat.sequence}
@@ -228,7 +231,11 @@ export function ReservePanel({ concert, tickets }: { concert: ConcertDto; ticket
                 Sign in to continue
               </Button>
             ) : (
-              <Button className="mt-6 h-13 w-full rounded-2xl text-base" disabled={!ticket || selected.length === 0 || reserveMutation.isPending} onClick={reserve}>
+              <Button
+                className="mt-6 h-13 w-full rounded-2xl text-base"
+                disabled={!ticket || selected.length === 0 || reserveMutation.isPending}
+                onClick={reserve}
+              >
                 {reserveMutation.isPending ? 'Reserving...' : 'Continue to Checkout'}
               </Button>
             )}

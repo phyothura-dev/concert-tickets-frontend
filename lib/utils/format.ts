@@ -1,8 +1,29 @@
-export function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+import { format, parseISO } from "date-fns";
+
+type DateValue = Date | string;
+
+function parseDate(value: DateValue) {
+  return typeof value === "string" ? parseISO(value) : value;
+}
+
+export function formatDate(value: DateValue, pattern = "MMM d, yyyy") {
+  return format(parseDate(value), pattern);
+}
+
+export function formatDateTime(value: DateValue) {
+  return formatDate(value, "MMM d, yyyy, h:mm a");
+}
+
+export function formatTime(value: DateValue) {
+  return formatDate(value, "h:mm a");
+}
+
+export function formatDateTimeInput(value: string) {
+  return formatDate(value, "yyyy-MM-dd'T'HH:mm");
+}
+
+export function toIsoDateTime(value: string) {
+  return parseISO(value).toISOString();
 }
 
 export function formatCurrency(value: number) {
@@ -18,4 +39,8 @@ export function formatCountdown(totalSeconds: number) {
   const minutes = Math.floor(safeSeconds / 60);
   const seconds = safeSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+export function formatSeatLabels(seats: ReadonlyArray<{ label: string }>, fallback = "Unassigned") {
+  return seats.map((seat) => seat.label).join(", ") || fallback;
 }

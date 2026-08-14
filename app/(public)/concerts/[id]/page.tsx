@@ -8,6 +8,7 @@ import { ReservePanel } from '@/components/checkout/reserve-panel';
 import { ApiError } from '@/lib/api/errors';
 import { concertService } from '@/lib/services/concert.service';
 import { ticketService } from '@/lib/services/ticket.service';
+import { formatDate, formatTime } from '@/lib/utils/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,6 @@ export default async function ConcertPage({ params }: ConcertPageProps) {
   }
 
   const concertTickets = tickets.filter((item) => item.concertId === concert.id);
-  const startsAt = new Date(concert.startsAt);
   const performer = concert.singers.map((singer) => singer.name).join(', ') || 'Live performers';
 
   return (
@@ -84,8 +84,8 @@ export default async function ConcertPage({ params }: ConcertPageProps) {
 
       <section className="relative z-10 mx-auto -mt-20 grid w-full max-w-7xl gap-6 px-4 pb-12 sm:px-8 lg:px-10">
         <div className="grid content-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <EventInfo icon={CalendarDays} label="Date" value={new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(startsAt)} />
-          <EventInfo icon={Clock3} label="Time" value={new Intl.DateTimeFormat('en', { timeStyle: 'short' }).format(startsAt)} />
+          <EventInfo icon={CalendarDays} label="Date" value={formatDate(concert.startsAt)} />
+          <EventInfo icon={Clock3} label="Time" value={formatTime(concert.startsAt)} />
           <EventInfo icon={MapPin} label="Venue" value={concert.venue} />
           <EventInfo icon={Music2} label="Category" value={concert.category?.name ?? 'Live music'} />
           <EventInfo icon={Users} label="Capacity" value={concert.totalStock.toLocaleString()} />

@@ -2,21 +2,23 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronLeft, ChevronRight, Eye, LoaderCircle, Search, ShieldCheck, Ticket, XCircle } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
 import { StatusBadge } from '@/components/admin/status-badge';
-import { ErrorState, LoadingState } from '@/components/ui/async-state';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ErrorState } from '@/components/ui/error-state';
 import { Input } from '@/components/ui/input';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Payment } from '@/lib/api/types';
 import { toUserMessage } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/query/keys';
 import { paymentService } from '@/lib/services/payment.service';
-import { formatCurrency, formatDateTime } from '@/lib/utils/format';
+import { formatCurrency, formatDateTime, formatSeatLabels } from '@/lib/utils/format';
 
 type StatusFilter = Payment['status'] | 'ALL';
 
@@ -32,14 +34,27 @@ const methodLabels: Record<Payment['paymentMethod'], string> = {
   WAVEPAY: 'WavePay',
 };
 
+const statusTones = {
+  PENDING_REVIEW: 'neutral',
+  APPROVED: 'success',
+  REJECTED: 'danger',
+  EXPIRED: 'danger',
+} as const;
+
 function PaymentStatusBadge({ status }: { status: Payment['status'] }) {
   return (
-    <StatusBadge
-      tone={status === 'APPROVED' ? 'success' : status === 'REJECTED' || status === 'EXPIRED' ? 'danger' : 'neutral'}
-      className={status === 'PENDING_REVIEW' ? 'bg-amber-100 text-amber-800' : undefined}
-    >
+    <StatusBadge tone={statusTones[status]} className={status === 'PENDING_REVIEW' ? 'bg-amber-100 text-amber-800' : undefined}>
       {statusLabels[status]}
     </StatusBadge>
+  );
+}
+
+function ReviewDetailRow({ label, children, amount = false }: { label: string; children: ReactNode; amount?: boolean }) {
+  return (
+    <div className="flex justify-between gap-4 p-3 text-sm">
+      <span className={amount ? 'font-semibold' : 'text-muted-foreground'}>{label}</span>
+      <span className={amount ? 'text-base font-bold text-brand' : 'text-right font-medium'}>{children}</span>
+    </div>
   );
 }
 
@@ -79,34 +94,18 @@ function PaymentReviewDialog({ payment }: { payment: Payment }) {
           <div className="space-y-5">
             <section>
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Order details</h3>
-              <dl className="mt-3 divide-y divide-border rounded-xl border border-border bg-surface">
-                <div className="flex justify-between gap-4 p-3 text-sm">
-                  <dt className="text-muted-foreground">Customer</dt>
-                  <dd className="text-right font-medium">{payment.user?.name ?? payment.user?.email ?? 'Unknown user'}</dd>
-                </div>
-                <div className="flex justify-between gap-4 p-3 text-sm">
-                  <dt className="text-muted-foreground">Concert</dt>
-                  <dd className="text-right font-medium">{payment.reservation.concert.title}</dd>
-                </div>
-                <div className="flex justify-between gap-4 p-3 text-sm">
-                  <dt className="text-muted-foreground">Ticket / Seats</dt>
-                  <dd className="text-right font-medium">
-                    {payment.reservation.ticket?.type ?? 'Legacy'} · {payment.reservation.seats.map((seat) => seat.label).join(', ') || 'Unassigned'}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4 p-3 text-sm">
-                  <dt className="text-muted-foreground">Payment type</dt>
-                  <dd className="font-medium">{methodLabels[payment.paymentMethod]}</dd>
-                </div>
-                <div className="flex justify-between gap-4 p-3 text-sm">
-                  <dt className="text-muted-foreground">Submitted</dt>
-                  <dd className="font-medium">{formatDateTime(payment.submittedAt)}</dd>
-                </div>
-                <div className="flex justify-between gap-4 p-3 text-sm">
-                  <dt className="font-semibold">Amount</dt>
-                  <dd className="text-base font-bold text-brand">{formatCurrency(payment.reservation.totalAmount ?? 0)}</dd>
-                </div>
-              </dl>
+              <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-surface">
+                <ReviewDetailRow label="Customer">{payment.user?.name ?? payment.user?.email ?? 'Unknown user'}</ReviewDetailRow>
+                <ReviewDetailRow label="Concert">{payment.reservation.concert.title}</ReviewDetailRow>
+                <ReviewDetailRow label="Ticket / Seats">
+                  {payment.reservation.ticket?.type ?? 'Legacy'} · {formatSeatLabels(payment.reservation.seats)}
+                </ReviewDetailRow>
+                <ReviewDetailRow label="Payment type">{methodLabels[payment.paymentMethod]}</ReviewDetailRow>
+                <ReviewDetailRow label="Submitted">{formatDateTime(payment.submittedAt)}</ReviewDetailRow>
+                <ReviewDetailRow amount label="Amount">
+                  {formatCurrency(payment.reservation.totalAmount ?? 0)}
+                </ReviewDetailRow>
+              </div>
             </section>
 
             {payment.rejectionReason ? (
@@ -163,15 +162,25 @@ export default function AdminPaymentsPage() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return payments.data?.items ?? [];
-    return (payments.data?.items ?? []).filter((payment) =>
-      [payment.id, payment.user?.name, payment.user?.email, payment.reservation.concert.title, methodLabels[payment.paymentMethod]].some((value) => value?.toLowerCase().includes(term)),
-    );
+
+    return (payments.data?.items ?? []).filter((payment) => {
+      const searchableValues = [payment.id, payment.user?.name, payment.user?.email, payment.reservation.concert.title, methodLabels[payment.paymentMethod]];
+      return searchableValues.some((value) => value?.toLowerCase().includes(term));
+    });
   }, [payments.data?.items, search]);
   const totalPages = Math.max(1, Math.ceil((payments.data?.total ?? 0) / (payments.data?.limit ?? 20)));
 
   function changeStatus(next: StatusFilter) {
     setStatus(next);
     setPage(1);
+  }
+
+  if (payments.isLoading) {
+    return <LoadingState />;
+  }
+
+  if (payments.isError) {
+    return <ErrorState message={toUserMessage(payments.error)} onRetry={() => void payments.refetch()} />;
   }
 
   return (
@@ -213,24 +222,7 @@ export default function AdminPaymentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.isLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="p-0">
-                  <LoadingState className="min-h-32 rounded-none border-0 shadow-none" label="Loading payment orders..." />
-                </TableCell>
-              </TableRow>
-            ) : payments.isError ? (
-              <TableRow>
-                <TableCell colSpan={8} className="p-0">
-                  <ErrorState
-                    className="min-h-32 rounded-none border-0 shadow-none"
-                    description={toUserMessage(payments.error)}
-                    onRetry={() => void payments.refetch()}
-                    title="Unable to load payment orders"
-                  />
-                </TableCell>
-              </TableRow>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="h-40 text-center">
                   <Ticket className="mx-auto h-7 w-7 text-muted-foreground" />
@@ -261,7 +253,7 @@ export default function AdminPaymentsPage() {
                   </TableCell>
                   <TableCell>
                     <p className="font-medium">{payment.reservation.ticket?.type ?? 'Legacy'}</p>
-                    <p className="mt-1 max-w-40 truncate text-xs text-muted-foreground">{payment.reservation.seats.map((seat) => seat.label).join(', ') || 'Unassigned'}</p>
+                    <p className="mt-1 max-w-40 truncate text-xs text-muted-foreground">{formatSeatLabels(payment.reservation.seats)}</p>
                   </TableCell>
                   <TableCell className="font-semibold">{formatCurrency(payment.reservation.totalAmount ?? 0)}</TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">{formatDateTime(payment.submittedAt)}</TableCell>

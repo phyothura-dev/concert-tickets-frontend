@@ -14,6 +14,7 @@ import { queryKeys } from '@/lib/query/keys';
 import { concertService } from '@/lib/services/concert.service';
 import { useModal } from '@/components/admin/form-modal';
 import { AdminFormActions } from '@/components/admin/admin-form-actions';
+import { formatDateTimeInput, toIsoDateTime } from '@/lib/utils/format';
 
 interface ConcertFormProps {
   initialData?: ConcertDto;
@@ -30,7 +31,7 @@ export function ConcertForm({ initialData }: ConcertFormProps) {
     defaultValues: {
       title: initialData?.title ?? '',
       venue: initialData?.venue ?? '',
-      startsAt: initialData?.startsAt ? new Date(initialData.startsAt).toISOString().slice(0, 16) : '',
+      startsAt: initialData?.startsAt ? formatDateTimeInput(initialData.startsAt) : '',
     },
   });
 
@@ -38,7 +39,7 @@ export function ConcertForm({ initialData }: ConcertFormProps) {
     mutationFn: (values: CreateConcertInput) => {
       const formattedValues = {
         ...values,
-        startsAt: new Date(values.startsAt).toISOString(),
+        startsAt: toIsoDateTime(values.startsAt),
       };
 
       if (isUpdate && initialData) {

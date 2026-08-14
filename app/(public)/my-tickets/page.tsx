@@ -8,12 +8,13 @@ import { useAuthModal } from '@/providers/auth-modal-provider';
 import { PublicFooter } from '@/components/layout/public-footer';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ErrorState, LoadingState } from '@/components/ui/async-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { toUserMessage } from '@/lib/api/errors';
 import type { ReservationHistory } from '@/lib/api/types';
 import { queryKeys } from '@/lib/query/keys';
 import { reservationService } from '@/lib/services/reservation.service';
-import { formatDateTime } from '@/lib/utils/format';
+import { formatDateTime, formatSeatLabels } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 
 const statusStyles: Record<ReservationHistory['status'], string> = {
@@ -33,6 +34,14 @@ export default function MyTicketsPage() {
     enabled: Boolean(currentUser),
   });
 
+  if (isAuthLoading || (currentUser && historyQuery.isLoading)) {
+    return <LoadingState />;
+  }
+
+  if (currentUser && historyQuery.isError) {
+    return <ErrorState message={toUserMessage(historyQuery.error)} onRetry={() => void historyQuery.refetch()} />;
+  }
+
   return (
     <div className="space-y-12">
 
@@ -43,8 +52,6 @@ export default function MyTicketsPage() {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">Newest bookings appear first.</p>
         </div>
-
-        {isAuthLoading ? <LoadingState label="Checking your account..." /> : null}
 
         {!isAuthLoading && !currentUser ? (
           <Card className="px-6 py-12 text-center sm:px-10">
@@ -58,16 +65,6 @@ export default function MyTicketsPage() {
               </Button>
             </div>
           </Card>
-        ) : null}
-
-        {currentUser && historyQuery.isLoading ? <LoadingState label="Loading ticket history..." /> : null}
-
-        {currentUser && historyQuery.isError ? (
-          <ErrorState
-            description={toUserMessage(historyQuery.error)}
-            onRetry={() => void historyQuery.refetch()}
-            title="Unable to load ticket history"
-          />
         ) : null}
 
         {currentUser && historyQuery.data?.length === 0 ? (
@@ -110,7 +107,7 @@ export default function MyTicketsPage() {
                     Booked {formatDateTime(reservation.createdAt)}
                   </p>
                   <p className="mt-2 text-sm font-medium">
-                    {reservation.ticket?.type ?? 'Legacy ticket'} · {reservation.seats.map((seat) => seat.label).join(', ') || 'Seats not assigned'}
+                    {reservation.ticket?.type ?? 'Legacy ticket'} · {formatSeatLabels(reservation.seats, 'Seats not assigned')}
                   </p>
                   {reservation.payment?.rejectionReason ? <p className="mt-2 text-sm text-danger">Rejected: {reservation.payment.rejectionReason}</p> : null}
                   {reservation.status === 'PENDING' ? (

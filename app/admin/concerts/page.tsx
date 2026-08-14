@@ -8,6 +8,7 @@ import { FormModal } from "@/components/admin/form-modal";
 import { ConcertForm } from "@/components/admin/forms/concert-form";
 import { DataTable, type ColumnDef } from "@/components/admin/data-table";
 import type { ConcertDto } from "@/lib/api/types";
+import { formatDate } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +30,7 @@ const columns: ColumnDef<ConcertDto>[] = [
     header: "Date",
     cell: (concert) => (
       <span className="text-zinc-500">
-        {new Date(concert.startsAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        })}
+        {formatDate(concert.startsAt, "MMM d")}
       </span>
     )
   },

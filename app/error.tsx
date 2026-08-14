@@ -1,7 +1,7 @@
 'use client';
 
-import { ErrorState } from '@/components/ui/async-state';
+import { ErrorState } from '@/components/ui/error-state';
 
-export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  return <ErrorState className="mx-auto w-full max-w-6xl" description={error.message || 'The page could not be loaded.'} onRetry={reset} title="Unable to load page" />;
+export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  return <ErrorState message="Unable to load page." onRetry={reset} />;
 }

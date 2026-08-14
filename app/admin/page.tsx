@@ -2,6 +2,7 @@ import { Ticket, Music, Users } from "lucide-react";
 import { concertService } from "@/lib/services/concert.service";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { formatDate } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +16,7 @@ export default async function AdminPage() {
   const eventsLive = concerts.length;
   const registeredUsers = 0; // API to be implemented later
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const currentDate = formatDate(new Date(), "MMMM yyyy");
 
   return (
     <div className="space-y-8">
@@ -80,10 +78,7 @@ export default async function AdminPage() {
           ) : (
             concerts.map((concert) => {
               const isSoldOut = concert.availableStock === 0;
-              const date = new Date(concert.startsAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              });
+              const date = formatDate(concert.startsAt, "MMM d");
 
               return (
                 <div

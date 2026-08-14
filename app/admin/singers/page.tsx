@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import type { CategoryDto, SingerDto } from "@/lib/api/types";
 import { categoryService } from "@/lib/services/category.service";
 import { singerService } from "@/lib/services/singer.service";
+import { formatDate } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -37,11 +38,7 @@ function getColumns(categories: CategoryDto[]): ColumnDef<SingerDto>[] {
       header: "Created Date",
       cell: (singer) => (
         <span className="text-zinc-500">
-          {new Date(singer.createdAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
+          {formatDate(singer.createdAt)}
         </span>
       ),
     },

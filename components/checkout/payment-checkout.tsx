@@ -1,33 +1,89 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, CheckCircle2, Clock3, FileImage, Info, LoaderCircle, ShieldCheck, Smartphone, TicketCheck, UploadCloud, WalletCards, X } from 'lucide-react';
+import {
+  Check,
+  CheckCircle2,
+  Clock3,
+  FileImage,
+  Info,
+  LoaderCircle,
+  ShieldCheck,
+  Smartphone,
+  TicketCheck,
+  UploadCloud,
+  WalletCards,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ReservationCountdown } from '@/components/checkout/reservation-countdown';
-import { ErrorState, LoadingState } from '@/components/ui/async-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ErrorState } from '@/components/ui/error-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { toUserMessage } from '@/lib/api/errors';
-import type { PaymentMethodId } from '@/lib/api/types';
+import type { PaymentMethodId, Reservation } from '@/lib/api/types';
 import { queryKeys } from '@/lib/query/keys';
 import { paymentService } from '@/lib/services/payment.service';
 import { reservationService } from '@/lib/services/reservation.service';
-import { formatCurrency } from '@/lib/utils/format';
+import { formatCurrency, formatSeatLabels } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 import { useAuthModal } from '@/providers/auth-modal-provider';
 
 const MAX_BYTES = 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-const methodIcons = {
-  KBZPAY: WalletCards,
-  WAVEPAY: Smartphone,
-} satisfies Record<PaymentMethodId, typeof WalletCards>;
+const PAYMENT_METHODS = {
+  KBZPAY: { icon: WalletCards, name: 'KBZPay' },
+  WAVEPAY: { icon: Smartphone, name: 'WavePay' },
+} satisfies Record<PaymentMethodId, { icon: typeof WalletCards; name: string }>;
+
+function getPaymentStatus(status: Reservation['status'], expired: boolean) {
+  if (expired) {
+    return {
+      icon: Clock3,
+      tone: 'bg-danger-muted text-danger',
+      title: 'Reservation hold expired',
+      description: 'The selected seats have been released. Choose your seats again to start a new checkout.',
+    };
+  }
+
+  if (status === 'UNDER_REVIEW') {
+    return {
+      icon: Clock3,
+      tone: 'bg-amber-100 text-amber-700',
+      title: 'Payment is under review',
+      description: 'An admin will verify your receipt. Your selected seats remain held during review.',
+    };
+  }
+
+  if (status === 'PURCHASED') {
+    return {
+      icon: CheckCircle2,
+      tone: 'bg-emerald-100 text-emerald-700',
+      title: 'Payment approved',
+      description: 'You can review the latest booking details in My Tickets.',
+    };
+  }
+
+  return {
+    icon: Info,
+    tone: 'bg-danger-muted text-danger',
+    title: `Payment ${status.toLowerCase()}`,
+    description: 'You can review the latest booking details in My Tickets.',
+  };
+}
+
+function getStepMarkerTone(complete: boolean, active: boolean) {
+  if (complete) return 'border-emerald-500 bg-emerald-500 text-white';
+  if (active) return 'border-brand bg-brand text-white';
+  return 'border-border bg-white text-muted-foreground';
+}
 
 function CheckoutSteps({ underReview }: { underReview: boolean }) {
   const steps = [
@@ -39,20 +95,35 @@ function CheckoutSteps({ underReview }: { underReview: boolean }) {
     <ol className="flex w-full items-center" aria-label="Checkout progress">
       {steps.map((step, index) => {
         const active = underReview ? index === 2 : index === 1;
+        const hasNextStep = index < steps.length - 1;
+        const markerTone = getStepMarkerTone(step.complete, active);
+
         return (
-          <li key={step.label} className={cn('flex min-w-0 items-center', index < steps.length - 1 ? 'flex-1' : 'shrink-0')}>
+          <li key={step.label} className={cn('flex min-w-0 items-center', hasNextStep ? 'flex-1' : 'shrink-0')}>
             <div className="relative z-10 flex shrink-0 items-center gap-2 bg-white pr-2.5 sm:pr-3">
               <span
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold sm:h-9 sm:w-9 sm:text-sm',
-                  step.complete ? 'border-emerald-500 bg-emerald-500 text-white' : active ? 'border-brand bg-brand text-white' : 'border-border bg-white text-muted-foreground',
+                  markerTone,
                 )}
               >
                 {step.complete ? <Check className="h-3.5 w-3.5" /> : index + 1}
               </span>
-              <span className={cn('hidden whitespace-nowrap text-sm font-semibold sm:inline', active || step.complete ? 'text-foreground' : 'text-muted-foreground')}>{step.label}</span>
+              <span
+                className={cn(
+                  'hidden whitespace-nowrap text-sm font-semibold sm:inline',
+                  active || step.complete ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {step.label}
+              </span>
             </div>
-            {index < steps.length - 1 ? <span className={cn('mr-2.5 h-px min-w-4 flex-1 sm:mr-3', step.complete ? 'bg-emerald-400' : 'bg-border')} aria-hidden="true" /> : null}
+            {hasNextStep ? (
+              <span
+                aria-hidden="true"
+                className={cn('mr-2.5 h-px min-w-4 flex-1 sm:mr-3', step.complete ? 'bg-emerald-400' : 'bg-border')}
+              />
+            ) : null}
           </li>
         );
       })}
@@ -124,7 +195,8 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
     setFile(next);
   }
 
-  if (authLoading) return <LoadingState className="mx-auto w-full max-w-6xl" label="Checking your account..." />;
+  if (authLoading)
+    return <LoadingState />;
   if (!user)
     return (
       <Card className="mx-auto max-w-lg rounded-3xl p-8 text-center">
@@ -136,35 +208,28 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
         </Button>
       </Card>
     );
-  if (reservationQuery.isLoading) return <LoadingState className="mx-auto w-full max-w-6xl" label="Loading reservation..." />;
+  if (reservationQuery.isLoading)
+    return <LoadingState />;
   if (reservationQuery.isError)
-    return (
-      <ErrorState
-        className="mx-auto w-full max-w-6xl"
-        description={toUserMessage(reservationQuery.error)}
-        onRetry={() => void reservationQuery.refetch()}
-        title="Unable to load reservation"
-      />
-    );
+    return <ErrorState message={toUserMessage(reservationQuery.error)} onRetry={() => void reservationQuery.refetch()} />;
   if (!reservation)
     return (
-      <ErrorState
-        action={
-          <Button asChild>
-            <Link href="/my-tickets">My Tickets</Link>
-          </Button>
-        }
-        className="mx-auto w-full max-w-lg"
-        description="This reservation is no longer available. Check your ticket history for its latest status."
-        title="Reservation unavailable"
-      />
+      <div className="flex min-h-[calc(100dvh-8rem)] w-full flex-col items-center justify-center text-center" role="alert">
+        <p className="text-sm text-danger">Reservation unavailable.</p>
+        <Button asChild className="mt-4">
+          <Link href="/my-tickets">My Tickets</Link>
+        </Button>
+      </div>
     );
 
   const awaitingUpload = reservation.status === 'PENDING';
   const canPay = awaitingUpload && !holdExpired;
   const underReview = reservation.status === 'UNDER_REVIEW';
   const isExpired = holdExpired || reservation.status === 'EXPIRED';
-  const paymentLabel = canPay ? selectedMethod?.name : reservation.payment?.paymentMethod === 'WAVEPAY' ? 'WavePay' : reservation.payment?.paymentMethod === 'KBZPAY' ? 'KBZPay' : 'Not submitted';
+  const submittedMethod = reservation.payment?.paymentMethod;
+  const paymentLabel = canPay ? selectedMethod?.name : submittedMethod ? PAYMENT_METHODS[submittedMethod].name : 'Not submitted';
+  const statusView = getPaymentStatus(reservation.status, isExpired);
+  const StatusIcon = statusView.icon;
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <header className="rounded-3xl border border-brand/10 bg-white px-5 py-5 shadow-sm sm:px-7">
@@ -191,18 +256,13 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
                 <fieldset>
                   <legend className="text-sm font-semibold">1. Select payment type</legend>
                   {configQuery.isLoading ? (
-                    <LoadingState className="mt-3 min-h-32 shadow-none" label="Loading payment methods..." />
+                    <LoadingState className="min-h-32" />
                   ) : configQuery.isError ? (
-                    <ErrorState
-                      className="mt-3 min-h-32 shadow-none"
-                      description={toUserMessage(configQuery.error)}
-                      onRetry={() => void configQuery.refetch()}
-                      title="Unable to load payment methods"
-                    />
+                    <ErrorState className="min-h-32" message={toUserMessage(configQuery.error)} onRetry={() => void configQuery.refetch()} />
                   ) : (
                     <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Payment type">
                       {configQuery.data?.methods.map((method) => {
-                        const Icon = methodIcons[method.id];
+                        const Icon = PAYMENT_METHODS[method.id].icon;
                         const selected = paymentMethod === method.id;
                         return (
                           <button
@@ -241,16 +301,16 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
                     <div className="min-w-0 flex-1">
                       <h2 id="payment-account-heading" className="text-sm font-semibold">2. Payment Account Information</h2>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">Use this same account for both KBZPay and WavePay transfers.</p>
-                      <dl className="mt-4 grid gap-3 rounded-xl border border-brand/10 bg-white p-4 text-sm sm:grid-cols-2">
+                      <div className="mt-4 grid gap-3 rounded-xl border border-brand/10 bg-white p-4 text-sm sm:grid-cols-2">
                         <div>
-                          <dt className="text-xs text-muted-foreground">Account Number</dt>
-                          <dd className="mt-1 break-all font-semibold tracking-wide">09968213232</dd>
+                          <p className="text-xs text-muted-foreground">Account Number</p>
+                          <p className="mt-1 break-all font-semibold tracking-wide">09968213232</p>
                         </div>
                         <div>
-                          <dt className="text-xs text-muted-foreground">Account Name</dt>
-                          <dd className="mt-1 break-words font-semibold">Phyo Thura</dd>
+                          <p className="text-xs text-muted-foreground">Account Name</p>
+                          <p className="mt-1 break-words font-semibold">Phyo Thura</p>
                         </div>
-                      </dl>
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -308,38 +368,11 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
               </>
             ) : (
               <div className="py-4 text-center">
-                <span
-                  className={cn(
-                    'mx-auto flex h-16 w-16 items-center justify-center rounded-full',
-                    underReview ? 'bg-amber-100 text-amber-700' : reservation.status === 'PURCHASED' ? 'bg-emerald-100 text-emerald-700' : 'bg-danger-muted text-danger',
-                  )}
-                >
-                  {isExpired ? (
-                    <Clock3 className="h-8 w-8" />
-                  ) : underReview ? (
-                    <Clock3 className="h-8 w-8" />
-                  ) : reservation.status === 'PURCHASED' ? (
-                    <CheckCircle2 className="h-8 w-8" />
-                  ) : (
-                    <Info className="h-8 w-8" />
-                  )}
+                <span className={cn('mx-auto flex h-16 w-16 items-center justify-center rounded-full', statusView.tone)}>
+                  <StatusIcon className="h-8 w-8" />
                 </span>
-                <h2 className="mt-5 text-xl font-bold">
-                  {isExpired
-                    ? 'Reservation hold expired'
-                    : underReview
-                      ? 'Payment is under review'
-                      : reservation.status === 'PURCHASED'
-                        ? 'Payment approved'
-                        : `Payment ${reservation.status.toLowerCase()}`}
-                </h2>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                  {isExpired
-                    ? 'The selected seats have been released. Choose your seats again to start a new checkout.'
-                    : underReview
-                      ? 'An admin will verify your receipt. Your selected seats remain held during review.'
-                      : 'You can review the latest booking details in My Tickets.'}
-                </p>
+                <h2 className="mt-5 text-xl font-bold">{statusView.title}</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">{statusView.description}</p>
                 {reservation.payment?.rejectionReason ? (
                   <p className="mx-auto mt-4 max-w-md rounded-xl bg-danger-muted p-3 text-sm text-danger">Reason: {reservation.payment.rejectionReason}</p>
                 ) : null}
@@ -370,7 +403,7 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Seats</span>
-              <span className="max-w-56 text-right font-medium">{reservation.seats.map((seat) => seat.label).join(', ') || 'Unassigned'}</span>
+              <span className="max-w-56 text-right font-medium">{formatSeatLabels(reservation.seats)}</span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Quantity</span>

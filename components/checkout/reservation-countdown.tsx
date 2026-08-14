@@ -1,8 +1,16 @@
 "use client";
 
 import { Clock } from "lucide-react";
+import { differenceInMilliseconds, parseISO } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { formatCountdown } from "@/lib/utils/format";
+
+function getRemainingSeconds(expiresAt: Date) {
+  return Math.max(
+    0,
+    Math.ceil(differenceInMilliseconds(expiresAt, new Date()) / 1000),
+  );
+}
 
 export function ReservationCountdown({
   expiresAt,
@@ -11,14 +19,14 @@ export function ReservationCountdown({
   expiresAt: string;
   onExpire: () => void;
 }) {
-  const expiresAtMs = useMemo(() => new Date(expiresAt).getTime(), [expiresAt]);
+  const expirationDate = useMemo(() => parseISO(expiresAt), [expiresAt]);
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
-    Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000)),
+    getRemainingSeconds(expirationDate),
   );
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      const next = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
+      const next = getRemainingSeconds(expirationDate);
       setRemainingSeconds(next);
       if (next <= 0) {
         window.clearInterval(interval);
@@ -27,7 +35,7 @@ export function ReservationCountdown({
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, [expiresAtMs, onExpire]);
+  }, [expirationDate, onExpire]);
 
   return (
     <div

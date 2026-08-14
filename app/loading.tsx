@@ -1,5 +1,5 @@
-import { LoadingState } from "@/components/ui/async-state";
+import { LoadingState } from '@/components/ui/loading-state';
 
 export default function Loading() {
-  return <LoadingState className="mx-auto w-full max-w-6xl" label="Loading page..." />;
+  return <LoadingState />;
 }

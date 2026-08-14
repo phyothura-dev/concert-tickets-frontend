@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LockKeyhole, Music2 } from "lucide-react";
+import { formatDate } from "@/lib/utils/format";
 
 export function PublicFooter() {
   return (
@@ -38,7 +39,7 @@ export function PublicFooter() {
       </div>
 
       <div className="flex flex-col gap-3 border-t border-white/10 px-6 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-9">
-        <p>© {new Date().getFullYear()} Music Concerts. All rights reserved.</p>
+        <p>© {formatDate(new Date(), "yyyy")} Music Concerts. All rights reserved.</p>
         <p className="flex items-center gap-2">
           <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5" />
           Secure booking with live inventory
