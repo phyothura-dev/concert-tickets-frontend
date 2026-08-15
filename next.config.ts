@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
         pathname: "/*/image/upload/**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+        port: "",
+        pathname: "/10.x/micah/svg",
+      },
     ],
   },
   async headers() {

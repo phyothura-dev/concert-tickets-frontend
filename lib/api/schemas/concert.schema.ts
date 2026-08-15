@@ -9,8 +9,8 @@ export const concertSchema = z.object({
   venue: z.string(),
   startsAt: z.string(),
   imageUrl: z.string().url().nullable().optional().transform((value) => value ?? null),
-  categoryId: z.string().uuid().nullable(),
-  category: categorySchema.nullable(),
+  categoryIds: z.array(z.string().uuid()),
+  categories: z.array(categorySchema),
   availableStock: z.number().int().nonnegative(),
   totalStock: z.number().int().nonnegative(),
   singerIds: z.array(z.string().uuid()),
@@ -21,6 +21,6 @@ export const concertInputSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(500, "Title is too long"),
   venue: z.string().trim().min(1, "Venue is required").max(500, "Venue is too long"),
   startsAt: z.string().trim().min(1, "Start date and time are required").refine((value) => isValid(parseISO(value)), "Enter a valid start date and time"),
-  categoryId: z.string().uuid("Select a valid category").nullable().optional(),
+  categoryIds: z.array(z.string().uuid()).max(50, "Select no more than 50 categories").optional(),
   singerIds: z.array(z.string().uuid()).max(50, "Select no more than 50 artists").optional(),
 });

@@ -24,9 +24,15 @@ function getColumns(categories: CategoryDto[], singers: SingerDto[]): ColumnDef<
     )
   },
   {
-    header: "Artist",
+    header: "Categories",
     cell: (concert) => (
-      <span className="text-zinc-500">{concert.singers?.[0]?.name || "Unknown"}</span>
+      <span className="text-zinc-500">{concert.categories.map((category) => category.name).join(", ") || "Uncategorized"}</span>
+    )
+  },
+  {
+    header: "Artists",
+    cell: (concert) => (
+      <span className="text-zinc-500">{concert.singers.map((singer) => singer.name).join(", ") || "Unknown"}</span>
     )
   },
   {

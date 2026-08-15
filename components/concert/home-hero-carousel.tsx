@@ -47,7 +47,7 @@ export function HomeHeroCarousel({ concerts }: HomeHeroCarouselProps) {
   }
 
   const performer = activeConcert?.singers.map((singer) => singer.name).join(", ")
-    || activeConcert?.category?.name
+    || activeConcert?.categories.map((category) => category.name).join(", ")
     || "Live Event";
 
   return (

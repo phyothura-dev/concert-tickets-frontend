@@ -52,9 +52,9 @@ export default async function Home({ searchParams }: HomeProps) {
   const venues = [...new Set(allConcerts.map((concert) => concert.venue))].sort();
   const categoryCounts = new Map<string, number>();
   allConcerts.forEach((concert) => {
-    if (concert.categoryId) {
-      categoryCounts.set(concert.categoryId, (categoryCounts.get(concert.categoryId) ?? 0) + 1);
-    }
+    concert.categoryIds.forEach((categoryId) => {
+      categoryCounts.set(categoryId, (categoryCounts.get(categoryId) ?? 0) + 1);
+    });
   });
 
   return (
