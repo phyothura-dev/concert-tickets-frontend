@@ -61,7 +61,11 @@ export default async function ConcertPage({ params }: ConcertPageProps) {
   return (
     <div className="-mx-4 -my-8 sm:-mx-6 lg:-mx-10 lg:-my-10">
       <section id="top" className="relative min-h-[31rem] scroll-mt-20 overflow-hidden bg-slate-950 text-white sm:min-h-[34rem]">
-        <Image src="/demo-preview.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center" />
+        {concert.imageUrl ? (
+          <Image src={concert.imageUrl} alt="" fill priority sizes="100vw" className="object-cover object-center" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-slate-950 to-black" aria-hidden="true" />
+        )}
         <div className="absolute inset-0 bg-slate-950/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-black/35" />
         <div className="relative mx-auto flex min-h-[31rem] w-full max-w-7xl flex-col px-5 py-6 sm:min-h-[34rem] sm:px-8 lg:px-10">

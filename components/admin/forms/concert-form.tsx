@@ -3,12 +3,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { AdminFormActions } from '@/components/admin/admin-form-actions';
 import { useModal } from '@/components/admin/form-modal';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toUserMessage } from '@/lib/api/errors';
 import { concertInputSchema } from '@/lib/api/schemas';
@@ -28,6 +30,7 @@ export function ConcertForm({ initialData, categories, singers }: ConcertFormPro
   const queryClient = useQueryClient();
   const { setOpen } = useModal();
   const isUpdate = Boolean(initialData);
+  const [image, setImage] = useState<File | null>(null);
 
   const form = useForm<ConcertInput>({
     resolver: zodResolver(concertInputSchema),
@@ -43,7 +46,7 @@ export function ConcertForm({ initialData, categories, singers }: ConcertFormPro
   const mutation = useMutation({
     mutationFn: (values: ConcertInput) => {
       const payload = { ...values, startsAt: toIsoDateTime(values.startsAt) };
-      return isUpdate && initialData ? concertService.updateConcert(initialData.id, payload) : concertService.createConcert(payload);
+      return isUpdate && initialData ? concertService.updateConcert(initialData.id, payload, image ?? undefined) : concertService.createConcert(payload, image ?? undefined);
     },
     onSuccess: () => {
       toast.success(isUpdate ? 'Concert updated' : 'Concert created');
@@ -135,6 +138,17 @@ export function ConcertForm({ initialData, categories, singers }: ConcertFormPro
       </FormField>
 
       </div>
+      <FormField label="Concert image" htmlFor="concert-image">
+        <ImageUpload
+          id="concert-image"
+          label="Choose concert image"
+          value={image}
+          existingImageUrl={initialData?.imageUrl}
+          disabled={mutation.isPending}
+          onChange={setImage}
+          onError={(message) => toast.error(message)}
+        />
+      </FormField>
       <AdminFormActions entityLabel="concert" isPending={mutation.isPending} isUpdate={isUpdate} onCancel={() => setOpen(false)} />
     </form>
   );

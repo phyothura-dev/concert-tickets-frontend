@@ -13,6 +13,14 @@ export type ConcertFilters = {
   categoryId?: string;
 };
 
+function concertBody(input: ConcertInput, image?: File) {
+  if (!image) return input;
+  const body = new FormData();
+  body.append("data", JSON.stringify(input));
+  body.append("image", image);
+  return body;
+}
+
 export const concertService = {
   async listConcerts(filters: ConcertFilters = {}) {
     const params = new URLSearchParams();
@@ -26,10 +34,11 @@ export const concertService = {
     return concertListEnvelope.parse(response).data;
   },
 
-  async createConcert(input: ConcertInput) {
+  async createConcert(input: ConcertInput, image?: File) {
     const response = await apiFetch<ApiEnvelope<ConcertDto>>("/concerts", {
       method: "POST",
-      body: input,
+      body: concertBody(input, image),
+      timeoutMs: image ? 30_000 : undefined,
     });
     return concertEnvelope.parse(response).data;
   },
@@ -40,10 +49,11 @@ export const concertService = {
     return concertEnvelope.parse(response).data;
   },
 
-  async updateConcert(id: string, input: ConcertInput) {
+  async updateConcert(id: string, input: ConcertInput, image?: File) {
     const response = await apiFetch<ApiEnvelope<ConcertDto>>(`/concerts/${id}`, {
       method: "PATCH",
-      body: input,
+      body: concertBody(input, image),
+      timeoutMs: image ? 30_000 : undefined,
     });
     return concertEnvelope.parse(response).data;
   },

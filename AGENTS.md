@@ -20,6 +20,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - `project-map.md`: architecture, routes, folder ownership, dependency boundaries.
 - `engineering-rules.md`: hard rules and conventions for future edits.
+- `clean-code.md`: readability, responsibility boundaries, focused reuse, and incremental refactoring rules.
 - `api-data-playbook.md`: API client, schemas, services, query keys, error handling.
 - `ui-ux-playbook.md`: UI system, accessibility, responsive design, shadcn/Tailwind rules.
 - `workflow-playbooks.md`: repeatable workflows for features, forms, auth, checkout, admin, and bug fixes.

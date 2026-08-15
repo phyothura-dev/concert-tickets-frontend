@@ -1,50 +1,32 @@
-import { CalendarDays, MapPin, Ticket } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import type { ConcertDto } from "@/lib/api/types";
-import { formatDateTime } from "@/lib/utils/format";
-import Image from "next/image";
+import { CalendarDays, MapPin, Ticket } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import type { ConcertDto } from '@/lib/api/types';
+import { formatDateTime } from '@/lib/utils/format';
+import Image from 'next/image';
 
-export function ConcertCard({
-  concert,
-}: {
-  concert: ConcertDto;
-}) {
+export function ConcertCard({ concert }: { concert: ConcertDto }) {
   const soldOut = concert.availableStock <= 0;
-  const soldPercent =
-    concert.totalStock > 0
-      ? Math.min(
-          100,
-          Math.round(
-            ((concert.totalStock - concert.availableStock) /
-              concert.totalStock) *
-              100,
-          ),
-        )
-      : 0;
+  const soldPercent = concert.totalStock > 0 ? Math.min(100, Math.round(((concert.totalStock - concert.availableStock) / concert.totalStock) * 100)) : 0;
 
   return (
-    <Card className="group flex h-full flex-col overflow-hidden rounded-2xl border-violet-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-200/60">
+    <Card  className="group flex h-full flex-col overflow-hidden rounded-2xl border-violet-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-200/60">
       <div className="relative h-40 overflow-hidden bg-gradient-to-br">
-        <Image
-          src="/demo-preview.jpg"
-          fill
-          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-          alt={concert.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        {concert.imageUrl ? (
+          <Image
+            src={concert.imageUrl}
+            fill
+            sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+            alt={concert.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="h-full bg-gradient-to-br from-brand/25 via-violet-100 to-slate-200" aria-hidden="true" />
+        )}
       </div>
       <CardHeader className="p-4 pb-2">
-        <CardTitle className="line-clamp-2 text-base leading-5 text-slate-950">
-          {concert.title}
-        </CardTitle>
+        <CardTitle className="line-clamp-2 text-base leading-5 text-slate-950">{concert.title}</CardTitle>
         <p className="text-sm text-slate-500">{concert.venue}</p>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-3 p-4 pt-0 text-sm text-slate-600">
@@ -58,22 +40,11 @@ export function ConcertCard({
         </p>
         <div className="mt-auto space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span>{soldOut ? "Sold out" : `${soldPercent}% sold`}</span>
-            <span
-              className={
-                soldOut ? "text-rose-600" : "font-semibold text-rose-500"
-              }
-            >
-              {soldOut
-                ? "0 left"
-                : `${concert.availableStock.toLocaleString()} left`}
-            </span>
+            <span>{soldOut ? 'Sold out' : `${soldPercent}% sold`}</span>
+            <span className={soldOut ? 'text-rose-600' : 'font-semibold text-rose-500'}>{soldOut ? '0 left' : `${concert.availableStock.toLocaleString()} left`}</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className={`h-full rounded-full ${soldOut ? "bg-danger" : "bg-brand"}`}
-              style={{ width: `${soldOut ? 100 : soldPercent}%` }}
-            />
+            <div className={`h-full rounded-full ${soldOut ? 'bg-danger' : 'bg-brand'}`} style={{ width: `${soldOut ? 100 : soldPercent}%` }} />
           </div>
         </div>
       </CardContent>
@@ -85,14 +56,8 @@ export function ConcertCard({
             {concert.totalStock.toLocaleString()}
           </span>
         </div>
-        <Button
-          asChild
-          className="h-9 rounded-full px-5 shadow-sm shadow-brand/30"
-          variant={soldOut ? "secondary" : "default"}
-        >
-          <Link href={`/concerts/${concert.id}`}>
-            {soldOut ? "View details" : "Reserve tickets"}
-          </Link>
+        <Button asChild className="h-9 rounded-full px-5 shadow-sm shadow-brand/30" variant={soldOut ? 'secondary' : 'default'}>
+          <Link href={`/concerts/${concert.id}`}>Book Tickets</Link>
         </Button>
       </CardFooter>
     </Card>

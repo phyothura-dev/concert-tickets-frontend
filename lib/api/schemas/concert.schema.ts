@@ -8,6 +8,7 @@ export const concertSchema = z.object({
   title: z.string(),
   venue: z.string(),
   startsAt: z.string(),
+  imageUrl: z.string().url().nullable().optional().transform((value) => value ?? null),
   categoryId: z.string().uuid().nullable(),
   category: categorySchema.nullable(),
   availableStock: z.number().int().nonnegative(),

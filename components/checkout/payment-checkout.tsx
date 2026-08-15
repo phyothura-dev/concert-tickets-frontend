@@ -5,26 +5,24 @@ import {
   Check,
   CheckCircle2,
   Clock3,
-  FileImage,
   Info,
   LoaderCircle,
   ShieldCheck,
   Smartphone,
   TicketCheck,
-  UploadCloud,
   WalletCards,
-  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { ReservationCountdown } from '@/components/checkout/reservation-countdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { toUserMessage } from '@/lib/api/errors';
 import type { PaymentMethodId, Reservation } from '@/lib/api/types';
@@ -34,9 +32,6 @@ import { reservationService } from '@/lib/services/reservation.service';
 import { formatCurrency, formatSeatLabels } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 import { useAuthModal } from '@/providers/auth-modal-provider';
-
-const MAX_BYTES = 1024 * 1024;
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const PAYMENT_METHODS = {
   KBZPAY: { icon: WalletCards, name: 'KBZPay' },
@@ -159,14 +154,6 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
     },
     onError: (error) => toast.error(toUserMessage(error)),
   });
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-  useEffect(
-    () => () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    },
-    [previewUrl],
-  );
-
   const reservation = reservationQuery.data;
   const selectedMethod = configQuery.data?.methods.find((method) => method.id === paymentMethod) ?? configQuery.data?.methods[0];
   const handleExpired = useCallback(() => {
@@ -176,24 +163,6 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
     void queryClient.invalidateQueries({ queryKey: queryKeys.reservation(reservationId) });
     router.refresh();
   }, [queryClient, reservationId, router]);
-
-  function selectFile(next: File | undefined) {
-    if (!next) {
-      setFile(null);
-      return;
-    }
-    if (!ACCEPTED_TYPES.includes(next.type)) {
-      setFile(null);
-      toast.error('Only JPEG, PNG, or WebP images are allowed');
-      return;
-    }
-    if (next.size > MAX_BYTES) {
-      setFile(null);
-      toast.error('Screenshot must be 1 MB or smaller');
-      return;
-    }
-    setFile(next);
-  }
 
   if (authLoading)
     return <LoadingState />;
@@ -319,38 +288,14 @@ export function PaymentCheckout({ reservationId, heading }: { reservationId: str
                   <h2 id="upload-heading" className="text-sm font-semibold">
                     3. Upload payment receipt
                   </h2>
-                  {!file ? (
-                    <label
-                      htmlFor="payment-proof"
-                      className="mt-3 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-brand/25 bg-brand/[0.025] px-5 py-7 text-center transition hover:border-brand/50 hover:bg-brand/5 focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2"
-                    >
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                        <UploadCloud className="h-6 w-6" />
-                      </span>
-                      <span className="mt-3 text-sm font-semibold">Choose your payment screenshot</span>
-                      <span className="mt-1 text-xs text-muted-foreground">JPEG, PNG, or WebP · Maximum 1 MB</span>
-                      <input id="payment-proof" className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectFile(event.target.files?.[0])} />
-                    </label>
-                  ) : (
-                    <div className="mt-3 flex flex-col gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 sm:flex-row sm:items-center">
-                      <div
-                        className="h-24 w-full shrink-0 rounded-xl bg-cover bg-center sm:w-28"
-                        style={{ backgroundImage: previewUrl ? `url(${previewUrl})` : undefined }}
-                        role="img"
-                        aria-label="Selected payment screenshot preview"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-2 font-semibold">
-                          <FileImage className="h-4 w-4 text-emerald-600" />
-                          <span className="truncate">{file.name}</span>
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">{(file.size / 1024).toFixed(0)} KB · Ready to upload</p>
-                      </div>
-                      <Button type="button" size="icon" variant="ghost" aria-label="Remove selected screenshot" onClick={() => setFile(null)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <ImageUpload
+                    id="payment-proof"
+                    className="mt-3"
+                    label="Choose your payment screenshot"
+                    value={file}
+                    onChange={setFile}
+                    onError={(message) => toast.error(message)}
+                  />
                 </section>
 
                 <Button className="h-13 w-full rounded-2xl text-base font-semibold shadow-lg shadow-brand/20" disabled={!file || !selectedMethod || upload.isPending} onClick={() => upload.mutate()}>

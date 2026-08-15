@@ -15,13 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import type { ConcertDto } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/utils/format";
-import { cn } from "@/lib/utils/cn";
 
 type HomeHeroCarouselProps = {
   concerts: ConcertDto[];
 };
-
-const imagePositions = ["object-center", "object-[center_42%]", "object-[center_58%]"];
 
 export function HomeHeroCarousel({ concerts }: HomeHeroCarouselProps) {
   const slides = concerts.slice(0, 3);
@@ -60,18 +57,19 @@ export function HomeHeroCarousel({ concerts }: HomeHeroCarouselProps) {
       className="relative flex min-h-[35rem] items-center overflow-hidden bg-black px-5 pb-24 pt-14 text-white sm:min-h-[39rem] sm:px-10 lg:min-h-[42rem] lg:px-16"
       data-section="hero"
     >
-      <Image
-        alt=""
-        className={cn(
-          "hero-slide-image object-cover",
-          imagePositions[activeIndex % imagePositions.length],
-        )}
-        fill
-        key={activeConcert?.id ?? "empty-feature"}
-        priority
-        sizes="100vw"
-        src="/demo-preview.jpg"
-      />
+      {activeConcert?.imageUrl ? (
+        <Image
+          alt=""
+          className="hero-slide-image object-cover object-center"
+          fill
+          key={activeConcert.id}
+          priority
+          sizes="100vw"
+          src={activeConcert.imageUrl}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-slate-950 to-black" aria-hidden="true" />
+      )}
       <div className="absolute inset-0 bg-black/35" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/25" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/20" />
