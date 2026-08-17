@@ -64,12 +64,7 @@ export function UserForm({ initialData }: UserFormProps) {
         <Input id="email" type="email" placeholder="name@example.com" autoComplete="off" aria-invalid={Boolean(form.formState.errors.email)} aria-describedby={form.formState.errors.email ? "email-error" : undefined} {...form.register("email")} />
       </FormField>
 
-      {!isUpdate ? (
-        <div className="flex gap-3 rounded-md border border-border bg-muted p-4 text-sm text-muted-foreground">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
-          <p>A secure default password will be assigned automatically. The user can also sign in with the same Google email.</p>
-        </div>
-      ) : null}
+    
 
       <FormField label="Full name" htmlFor="name" required errorId="name-error" error={form.formState.errors.name?.message}>
         <Input id="name" placeholder="e.g. Thura Aung" autoComplete="off" aria-invalid={Boolean(form.formState.errors.name)} aria-describedby={form.formState.errors.name ? "name-error" : undefined} {...form.register("name")} />

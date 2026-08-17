@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import * as React from "react";
-import { cn } from "@/lib/utils/cn";
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import { Check } from 'lucide-react';
+import * as React from 'react';
+import { cn } from '@/lib/utils/cn';
 
 export const DropdownMenu = DropdownMenuPrimitive.Root;
 export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
@@ -10,13 +11,13 @@ export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 export const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
->(({ className, sideOffset = 8, ...props }, ref) => (
+>(({ className, sideOffset = 4, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-44 overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md",
+        'z-50 min-w-44 overflow-hidden rounded-md border border-border bg-surface p-1 text-foreground shadow-md',
         className,
       )}
       {...props}
@@ -32,7 +33,7 @@ export const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-zinc-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-muted focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}
@@ -40,3 +41,23 @@ export const DropdownMenuItem = React.forwardRef<
 ));
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
+export const DropdownMenuCheckboxItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
+>(({ className, children, checked, ...props }, ref) => (
+  <DropdownMenuPrimitive.CheckboxItem
+    ref={ref}
+    className={cn(
+      'relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2.5 py-1.5 text-sm outline-none transition-colors hover:bg-muted focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      className,
+    )}
+    checked={checked}
+    {...props}
+  >
+    <span>{children}</span>
+    <DropdownMenuPrimitive.ItemIndicator>
+      <Check className="h-4 w-4 text-foreground" />
+    </DropdownMenuPrimitive.ItemIndicator>
+  </DropdownMenuPrimitive.CheckboxItem>
+));
+DropdownMenuCheckboxItem.displayName = DropdownMenuPrimitive.CheckboxItem.displayName;
